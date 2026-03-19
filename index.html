@@ -53,14 +53,14 @@
             
             msg.innerText = "Verificando...";
 
-                           signInWithEmailAndPassword(auth, email, pass)
+                        signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
                     msg.classList.remove('text-red-500');
                     msg.classList.add('text-green-500');
                     msg.innerText = "¡Bienvenido, Jury! Entrando...";
                     
                     setTimeout(() => {
-                        window.location.href = "dashboard.html"; // contadorrrrrr
+                        window.location.href = "dashboard.html";
                     }, 2000);
                 })
                 .catch((error) => {
