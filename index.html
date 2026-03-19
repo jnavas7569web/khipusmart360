@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-600">
+        <h2 class="text-3xl font-extrabold mb-2 text-center text-gray-800">KhipuSmart360</h2>
+        <p class="text-sm text-gray-500 mb-8 text-center uppercase tracking-widest font-semibold">Panel de Control</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">CORREO ELECTRÓNICO</label>
+                <input type="email" id="email" placeholder="ejemplo@gmail.com" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">CONTRASEÑA</label>
+                <input type="password" id="password" placeholder="••••••••" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            </div>
+            
+            <button id="loginBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transform hover:scale-[1.02] transition shadow-lg mt-4">
+                INGRESAR AL SISTEMA
+            </button>
+        </div>
+        
+        <p id="message" class="mt-6 text-center text-red-500 text-sm font-medium h-4"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // llaves para la conexio
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+            authDomain: "khipusmart360.firebaseapp.com",
+            projectId: "khipusmart360",
+            storageBucket: "khipusmart360.firebasestorage.app",
+            messagingSenderId: "240593523716",
+            appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const msg = document.getElementById('message');
+            
+            msg.innerText = "Verificando...";
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    msg.classList.remove('text-red-500');
+                    msg.classList.add('text-green-500');
+                    msg.innerText = "¡Bienvenido, Jury! Entrando...";
+                    // Aquí luego configuraremos a dónde saltar (el dashboard)
+                })
+                .catch((error) => {
+                    msg.innerText = "Error: Usuario o clave incorrectos";
+                });
+        });
+    </script>
+</body>
+</html>
