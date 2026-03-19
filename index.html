@@ -58,12 +58,12 @@
                     msg.classList.remove('text-red-500');
                     msg.classList.add('text-green-500');
                     msg.innerText = "¡Bienvenido, Jury! Entrando...";
-                    // Aquí luego configuraremos a dónde saltar (el dashboard)
+                    
+                    // Esperamos 2000 milisegundos (2 segundos) y saltamos
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 2000);
                 })
-                .catch((error) => {
-                    msg.innerText = "Error: Usuario o clave incorrectos";
-                });
-        });
     </script>
 </body>
 </html>
