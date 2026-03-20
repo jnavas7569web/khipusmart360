@@ -487,40 +487,57 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
- // 4. EL FILTRO: Si no hay sesión, te saca. Si hay, te deja.
-onAuthStateChanged(auth, (user) => {
+ // -4 ... roles y usuarios arriba del dashhhh
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const nombreDocente = document.getElementById('nombre-docente');
-    const cursoDocente = document.getElementById('curso-docente');
-    const cajaTop = document.getElementById('caja-top-estudiantes'); // Nueva variable
+    console.log("Sesión activa de:", user.email);
 
-    if (user.email === "jnavas7569@gmail.com") {
-        // --- VISTA DE ADMIN ---
-        if(nombreDocente) nombreDocente.innerText = "Admin: Jury Navas";
-        if(cursoDocente) cursoDocente.innerText = "Gestionando: 12 Cursos Activos";
-        
-        // OCULTAR CAJA 3 PARA EL ADMIN
-        if(cajaTop) cajaTop.style.display = 'none'; 
+    try {
+        // 1. BUSCAMOS AL USUARIO EN LA COLECCIÓN 'usuarios'
+        const docRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(docRef);
 
+        const nombreDocente = document.getElementById('nombre-docente');
+        const cursoDocente = document.getElementById('curso-docente');
+        const cajaTop = document.getElementById('caja-top-estudiantes');
         const panelAdmin = document.getElementById('panel-admin');
-        if (panelAdmin) panelAdmin.style.display = 'block';
 
-    } else {
-        // --- VISTA DE DOCENTE ---
-        if(nombreDocente) nombreDocente.innerText = "Prof. [Nombre del Docente]"; 
-        if(cursoDocente) cursoDocente.innerText = "Quinto Año - Paralelo 'A'";
-        
-        // MOSTRAR CAJA 3 PARA EL DOCENTE
-        if(cajaTop) cajaTop.style.display = 'block'; 
+        if (docSnap.exists()) {
+            const datos = docSnap.data();
+            
+            // 2. PONEMOS EL NOMBRE REAL DESDE LA BD
+            // Si el rol es admin o superadmin, ponemos el prefijo Admin, sino Prof.
+            const prefijo = (datos.rol === 'admin' || datos.rol === 'superadmin') ? "Admin: " : "Prof. ";
+            if(nombreDocente) nombreDocente.innerText = prefijo + datos.nombre_completo;
 
-        const panelAdmin = document.getElementById('panel-admin');
-        if (panelAdmin) panelAdmin.style.display = 'none';
+            // 3. LÓGICA POR ROL (DINÁMICA)
+            if (datos.rol === 'superadmin' || datos.rol === 'admin') {
+                // VISTA ADMIN
+                if(cursoDocente) cursoDocente.innerText = "Gestión Global del Sistema";
+                if(cajaTop) cajaTop.style.display = 'none'; // El admin no ve el Top 3
+                if(panelAdmin) panelAdmin.style.display = 'block'; // El admin ve el botón de añadir usuario
+            } else {
+                // VISTA DOCENTE
+                if(cursoDocente) cursoDocente.innerText = "Docente Autorizado"; 
+                if(cajaTop) cajaTop.style.display = 'block'; // El docente sí ve su Top 3
+                if(panelAdmin) panelAdmin.style.display = 'none'; // El docente no puede crear usuarios
+            }
+
+        } else {
+            // Caso de seguridad: el usuario está en Auth pero no en la colección Usuarios
+            if(nombreDocente) nombreDocente.innerText = "Usuario no perfilado";
+            console.warn("El UID no existe en la colección de usuarios.");
+        }
+
+    } catch (error) {
+        console.error("Error al cargar datos del usuario:", error);
     }
+
   } else {
+    // Si no hay nadie logueado, al inicio
     window.location.href = "index.html";
   }
 });
-
 
 
   // 5. Función para el botón de SALIR que dibujaste
