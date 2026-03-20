@@ -6,75 +6,19 @@
     <title>KhipuSmart360 - Registro Estudiantes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { 
-            --naranja: #ffb74d; 
-            --gris-fondo: #f4f7f6; 
-            --blanco: #ffffff; 
-            --azul: #5c6bc0; 
-            --gris-texto: #333;
-        }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--gris-fondo); 
-            margin: 0; 
-            padding: 15px; 
-            display: flex;
-            justify-content: center;
-        }
-        .container { 
-            max-width: 600px; 
-            width: 100%;
-            background: var(--blanco); 
-            padding: 25px; 
-            border-radius: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        }
-        h2 { color: var(--azul); text-align: center; margin-top: 0; font-size: 1.5rem; }
+        :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { max-width: 600px; width: 100%; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--azul); text-align: center; margin-bottom: 20px; }
         h3 { color: var(--azul); font-size: 1rem; border-bottom: 2px solid var(--gris-fondo); padding-bottom: 5px; margin-top: 20px; }
-        
         .form-group { margin-bottom: 15px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9rem; }
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 1rem;
-            outline: none;
-        }
-        input:focus, select:focus { border-color: var(--azul); }
-        
-        .btn-registrar { 
-            width: 100%; 
-            padding: 15px; 
-            background: var(--naranja); 
-            border: none; 
-            color: white; 
-            font-weight: bold; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 1.1rem; 
-            margin-top: 20px; 
-            transition: background 0.3s;
-        }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
+        .btn-registrar { width: 100%; padding: 15px; background: var(--naranja); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
         .btn-registrar:hover { background: #ffa726; }
-        
-        .btn-volver { 
-            display: block; 
-            text-align: center; 
-            margin-top: 20px; 
-            text-decoration: none; 
-            color: #888; 
-            font-size: 0.9rem; 
-        }
-        
-        /* Estilos para móviles */
-        @media (max-width: 480px) {
-            .grid-2 { grid-template-columns: 1fr; gap: 0; }
-        }
+        .btn-volver { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 0.9rem; }
+        @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -83,22 +27,22 @@
     <h2><i class="fa-solid fa-user-plus"></i> Registro de Estudiante</h2>
     
     <form id="form-estudiante">
-        <h3>Datos Personales</h3>
+        <h3>Datos del Estudiante</h3>
         <div class="grid-2">
             <div class="form-group">
                 <label>Nombres:</label>
-                <input type="text" id="nombres" placeholder="Ej: Juan Alberto" required>
+                <input type="text" id="nombres" placeholder="Ej: Alisson Briggitte" required>
             </div>
             <div class="form-group">
                 <label>Apellidos:</label>
-                <input type="text" id="apellidos" placeholder="Ej: Pérez Castro" required>
+                <input type="text" id="apellidos" placeholder="Ej: Osorio Morales" required>
             </div>
         </div>
 
         <div class="grid-2">
             <div class="form-group">
                 <label>Cédula:</label>
-                <input type="number" id="cedula" placeholder="1312345678" required>
+                <input type="number" id="cedula" placeholder="1310..." required>
             </div>
             <div class="form-group">
                 <label>Fecha Nacimiento:</label>
@@ -109,29 +53,51 @@
         <div class="grid-2">
             <div class="form-group">
                 <label>Grado / Año:</label>
-                <select id="select-grado" required>
-                    <option value="">Seleccione...</option>
-                </select>
+                <select id="select-grado" required><option value="">Seleccione...</option></select>
             </div>
             <div class="form-group">
                 <label>Paralelo:</label>
-                <select id="select-paralelo" required>
-                    <option value="">Seleccione...</option>
-                </select>
+                <select id="select-paralelo" required><option value="">Seleccione...</option></select>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>¿Estudiante NEE? (Discapacidad):</label>
+            <select id="estudiante_NEE">
+                <option value="no">No</option>
+                <option value="si">Sí</option>
+            </select>
         </div>
 
         <h3>Datos del Representante</h3>
         <div class="form-group">
             <label>Nombre del Representante:</label>
-            <input type="text" id="representante" placeholder="Ej: María Castro" required>
+            <input type="text" id="representante" placeholder="Ej: Carmen Morales" required>
         </div>
-        <div class="form-group">
-            <label>Teléfono (WhatsApp):</label>
-            <input type="tel" id="telefono_representante" placeholder="0987654321" required>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Cédula Representante:</label>
+                <input type="number" id="representante_cedula" placeholder="12345678" required>
+            </div>
+            <div class="form-group">
+                <label>Parentesco:</label>
+                <select id="representante_parentesco" required>
+                    <option value="Mamá">Mamá</option>
+                    <option value="Papá">Papá</option>
+                    <option value="Abuelo/a">Abuelo/a</option>
+                    <option value="Tío/a">Tío/a</option>
+                    <option value="Representante Legal">Representante Legal</option>
+                </select>
+            </div>
         </div>
 
-        <button type="submit" class="btn-registrar">GUARDAR EN FIREBASE</button>
+        <div class="form-group">
+            <label>Teléfono (WhatsApp):</label>
+            <input type="tel" id="telefono_representante" placeholder="0997652811" required>
+        </div>
+
+        <button type="submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
     </form>
 
     <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Panel</a>
@@ -142,7 +108,6 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // TUS CREDENCIALES REALES
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
         authDomain: "khipusmart360.firebaseapp.com",
@@ -161,7 +126,6 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             docenteId = user.uid;
-            console.log("Sesión activa como:", docenteId);
             cargarGrados();
             cargarParalelos();
         } else {
@@ -199,10 +163,13 @@
             nombres: document.getElementById('nombres').value,
             apellidos: document.getElementById('apellidos').value,
             cedula: document.getElementById('cedula').value,
+            estudiante_NEE: document.getElementById('estudiante_NEE').value,
             fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
             id_grado: document.getElementById('select-grado').value,
             id_paralelo: document.getElementById('select-paralelo').value,
             representante: document.getElementById('representante').value,
+            representante_cedula: document.getElementById('representante_cedula').value,
+            representante_parentesco: document.getElementById('representante_parentesco').value,
             telefono_representante: document.getElementById('telefono_representante').value,
             id_docente: docenteId,
             fecha_registro: new Date()
@@ -210,14 +177,13 @@
 
         try {
             await addDoc(collection(db, "estudiantes"), data);
-            alert("✅ ¡Estudiante guardado exitosamente!");
+            alert("✅ Estudiante registrado exitosamente.");
             document.getElementById('form-estudiante').reset();
         } catch (error) {
-            console.error("Error al guardar:", error);
-            alert("❌ Hubo un problema al guardar los datos.");
+            console.error("Error:", error);
+            alert("❌ Error al guardar.");
         }
     });
 </script>
-
 </body>
 </html>
