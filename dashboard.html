@@ -451,5 +451,48 @@
         });
     </script>
 
+
+// bloqueioo
+<script type="module">
+  // 1. Importamos las herramientas de Firebase (asegúrate de que estas rutas sean las mismas que usaste en el login)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // 2. Tu configuración de Firebase (LA MISMA que usaste en el login)
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_STORAGE_BUCKET",
+    messagingSenderId: "TU_MESSAGING_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+
+  // 3. Inicializamos Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // 4. EL GUARDIA: Vigila si el usuario está autenticado
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // El usuario ha iniciado sesión, ¡puedes quedarte!
+      console.log("Bienvenido: ", user.email);
+    } else {
+      // ¡ALERTA! No hay sesión activa. Expulsando al login...
+      window.location.href = "index.html"; 
+    }
+  });
+
+  // 5. Función para el botón de SALIR
+  const btnSalir = document.querySelector('.btn-salir');
+  btnSalir.addEventListener('click', () => {
+    auth.signOut().then(() => {
+      window.location.href = "index.html";
+    });
+  });
+</script>
+
+//
+    
 </body>
 </html>
