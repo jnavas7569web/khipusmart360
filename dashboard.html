@@ -159,10 +159,14 @@
         }
 
         .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+    display: flex;
+    align-items: center;
+    /* Quitamos el gap porque ya no hay texto con el que chocar */
+    justify-content: flex-end; 
+    }
+
+/* Puedes borrar los estilos de .user-info, .user-name-role y .user-course 
+   ya que no los usaremos más en el header */
 
         .user-info {
             text-align: right;
@@ -363,11 +367,7 @@
             </div>
             
             <div class="nav-right">
-                <div class="user-info">
-                    <div class="user-name-role">ADMIN: JURY NAVAS</div>
-                    <div class="user-course">QUINTO AÑO - PARALELO "C"</div>
-                </div>
-                <div class="esc-logo">ESC</div>
+              <div class="esc-logo">ESC</div>
             </div>
         </header>
 <!-- /////////////////////////// -->
