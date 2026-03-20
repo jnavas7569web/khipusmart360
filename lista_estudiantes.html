@@ -103,9 +103,32 @@
 
     let docenteId = "";
 
+    // 1. CARGAR SELECTORES AL INICIAR
+    async function cargarFiltros() {
+        const sGrado = document.getElementById('select-grado-filtro');
+        const sParalelo = document.getElementById('select-paralelo-filtro');
+
+        try {
+            const snapGrados = await getDocs(collection(db, "grados"));
+            sGrado.innerHTML = '<option value="">-- Seleccionar Grado --</option>';
+            snapGrados.forEach(d => {
+                sGrado.innerHTML += `<option value="${d.id}">${d.data().nombre || d.id}</option>`;
+            });
+
+            const snapParalelos = await getDocs(collection(db, "paralelos"));
+            sParalelo.innerHTML = '<option value="">-- Seleccionar Paralelo --</option>';
+            snapParalelos.forEach(d => {
+                const p = d.data().nombre || d.id;
+                sParalelo.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        } catch (e) { console.error("Error cargando filtros:", e); }
+    }
+
     onAuthStateChanged(auth, (user) => {
-        if (user) { docenteId = user.uid; console.log("ID Docente Detectado:", docenteId); } 
-        else { window.location.href = "index.html"; }
+        if (user) { 
+            docenteId = user.uid; 
+            cargarFiltros(); 
+        } else { window.location.href = "index.html"; }
     });
 
     function calcularEdad(fechaStr) {
@@ -117,68 +140,70 @@
         return isNaN(edad) ? "Error" : edad;
     }
 
+    // 2. BOTÓN CARGAR CON FILTROS
     document.getElementById('btn-cargar').addEventListener('click', async () => {
+        const gradoId = document.getElementById('select-grado-filtro').value;
+        const paraleloId = document.getElementById('select-paralelo-filtro').value;
+
+        if (!gradoId || !paraleloId) {
+            alert("⚠️ Por favor, selecciona Grado y Paralelo antes de cargar.");
+            return;
+        }
+
         const cuerpo = document.getElementById('lista-cuerpo');
         const icon = document.getElementById('icon-sync');
         
-        icon.classList.add('fa-spin'); // Animación de carga
-        cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Buscando en la base de datos...</td></tr>";
+        icon.classList.add('fa-spin');
+        cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Filtrando estudiantes...</td></tr>";
         document.getElementById('student-list-section').style.display = "block";
 
         try {
-            // CONSULTA SIMPLIFICADA (Para evitar errores de índice)
-            const q = query(collection(db, "estudiantes"), where("id_docente", "==", docenteId));
+            const q = query(
+                collection(db, "estudiantes"), 
+                where("id_docente", "==", docenteId),
+                where("id_grado", "==", gradoId),
+                where("id_paralelo", "==", paraleloId)
+            );
+
             const snapshot = await getDocs(q);
-            
             cuerpo.innerHTML = "";
             icon.classList.remove('fa-spin');
 
             if (snapshot.empty) {
-                cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No tienes estudiantes registrados aún.</td></tr>";
+                cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay estudiantes en este curso.</td></tr>";
                 return;
             }
 
-            // Guardamos en un array para ordenar con JS
             let lista = [];
             snapshot.forEach(d => lista.push({ id: d.id, ...d.data() }));
-            
-            // Ordenamos alfabéticamente por apellido
             lista.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
 
-           // --- ESTA ES LA PARTE DONDE SE CREAN LAS FILAS ---
-lista.forEach((est) => {
-    const fila = document.createElement('tr');
-    
-    // 1. Agregamos estilo de cursor para que el profe sepa que puede hacer clic
-    fila.style.cursor = "pointer";
-    fila.title = "Clic para editar a este estudiante";
+            lista.forEach((est) => {
+                const fila = document.createElement('tr');
+                fila.style.cursor = "pointer";
+                fila.innerHTML = `
+                    <td style="font-weight: 500;">
+                        <i class="fa-solid fa-pen-to-square" style="color: #ccc; margin-right: 8px;"></i>
+                        ${est.apellidos} ${est.nombres}
+                    </td>
+                    <td>${est.cedula}</td>
+                    <td>${calcularEdad(est.fecha_nacimiento)} años</td>
+                    <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
+                    <td>
+                        <button class="btn btn-delete" data-id="${est.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
 
-    fila.innerHTML = `
-        <td style="font-weight: 500;">
-            <i class="fa-solid fa-pen-to-square" style="color: #ccc; margin-right: 8px;"></i>
-            ${est.apellidos} ${est.nombres}
-        </td>
-        <td>${est.cedula}</td>
-        <td>${calcularEdad(est.fecha_nacimiento)} años</td>
-        <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
-        <td>
-            <button class="btn btn-delete" data-id="${est.id}"><i class="fa-solid fa-trash"></i></button>
-        </td>
-    `;
+                // Evento para Editar
+                fila.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-delete')) return;
+                    window.location.href = `estudiantes.html?edit=${est.id}`;
+                });
 
-    // 2. AGREGAMOS EL EVENTO DE CLIC PARA EDITAR
-    fila.addEventListener('click', (e) => {
-        // Si el clic fue en el botón rojo de borrar, NO entramos a editar
-        if (e.target.closest('.btn-delete')) return;
-        
-        // Redirigimos a la página de registro pasando el ID por la URL
-        window.location.href = `estudiantes.html?edit=${est.id}`;
-    });
+                cuerpo.appendChild(fila);
+            });
 
-    cuerpo.appendChild(fila);
-});
-
-            // Lógica para borrar
+            // Lógica para Borrar
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.onclick = async (e) => {
                     e.stopPropagation();
@@ -191,8 +216,8 @@ lista.forEach((est) => {
             });
 
         } catch (error) {
-            console.error("Error al cargar:", error);
-            cuerpo.innerHTML = `<tr><td colspan='5' style='color:red;'>Error: ${error.message}</td></tr>`;
+            console.error(error);
+            cuerpo.innerHTML = "<tr><td colspan='5' style='color:red;'>Error al cargar datos.</td></tr>";
             icon.classList.remove('fa-spin');
         }
     });
