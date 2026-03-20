@@ -57,22 +57,20 @@
             
             msg.innerText = "Verificando credenciales...";
 
+
+                    
+      
             signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
-                    msg.classList.remove('text-red-500');
-                    msg.classList.add('text-green-500');
-                    msg.innerText = "¡Bienvenido, Jury! Entrando...";
-                    
-                    // ESTA ES LA MAGIA: Espera 2 segundos y salta al Dashboard
-                    setTimeout(() => {
-                        window.location.replace = "dashboard.html";
-                    }, 2000);
+         
+                    window.location.assign("./dashboard.html");
                 })
                 .catch((error) => {
                     msg.classList.remove('text-green-500');
                     msg.classList.add('text-red-500');
                     msg.innerText = "Error: Usuario o clave incorrectos";
-                });
+                });     
+           
         });
     </script>
 </body>
