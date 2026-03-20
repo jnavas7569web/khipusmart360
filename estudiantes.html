@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Registro Estudiantes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; }
+        body { font-family: sans-serif; background: var(--gris-fondo); margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: var(--azul); text-align: center; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .btn-registrar { width: 100%; padding: 12px; background: var(--naranja); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; }
+        .btn-registrar:hover { background: #ffa726; }
+        .btn-volver { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fa-solid fa-user-plus"></i> Nuevo Estudiante</h2>
+    <form id="form-estudiante">
+        <div class="form-group">
+            <label>Nombres y Apellidos:</label>
+            <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+        </div>
+        <div class="form-group">
+            <label>N° de Cédula:</label>
+            <input type="number" id="cedula" placeholder="1312345678" required>
+        </div>
+        <div class="form-group">
+            <label>Grado / Año:</label>
+            <select id="select-grado" required>
+                <option value="">Seleccione un grado...</option>
+                </select>
+        </div>
+        <div class="form-group">
+            <label>Paralelo:</label>
+            <select id="select-paralelo" required>
+                <option value="">Seleccione paralelo...</option>
+                </select>
+        </div>
+        <button type="submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
+    </form>
+    <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // --- TUS CREDENCIALES (Copia las mismas de tu dashboard) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let docenteId = ""; // Aquí guardaremos tu ID automáticamente
+
+    // 1. SEGURIDAD Y OBTENER ID DOCENTE
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            docenteId = user.uid; // El ID único de quien está logueado
+            console.log("Registrando como docente:", docenteId);
+            cargarGrados();
+            cargarParalelos();
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    // 2. CARGAR GRADOS DESDE TU COLECCIÓN 'grados'
+    async function cargarGrados() {
+        const selectGrado = document.getElementById('select-grado');
+        const q = query(collection(db, "grados"), orderBy("orden", "asc"));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+            let opt = document.createElement('option');
+            opt.value = doc.id; // El ID de Firebase (ej: 1, 2, 3...)
+            opt.innerHTML = doc.data().nombre;
+            selectGrado.appendChild(opt);
+        });
+    }
+
+    // 3. CARGAR PARALELOS DESDE TU COLECCIÓN 'paralelos'
+    async function cargarParalelos() {
+        const selectParalelo = document.getElementById('select-paralelo');
+        const querySnapshot = await getDocs(collection(db, "paralelos"));
+        querySnapshot.forEach((doc) => {
+            let opt = document.createElement('option');
+            opt.value = doc.data().nombre; 
+            opt.innerHTML = doc.data().nombre;
+            selectParalelo.appendChild(opt);
+        });
+    }
+
+    // 4. GUARDAR ESTUDIANTE EN FIREBASE
+    document.getElementById('form-estudiante').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nuevoEstudiante = {
+            nombre: document.getElementById('nombre').value,
+            cedula: document.getElementById('cedula').value,
+            id_grado: document.getElementById('select-grado').value,
+            paralelo: document.getElementById('select-paralelo').value,
+            id_docente: docenteId, // SE ASOCIA AUTOMÁTICAMENTE
+            fecha_registro: new Date()
+        };
+
+        try {
+            await addDoc(collection(db, "estudiantes"), nuevoEstudiante);
+            alert("✅ Estudiante registrado con éxito en KhipuSmart360");
+            document.getElementById('form-estudiante').reset();
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            alert("❌ Hubo un error al guardar.");
+        }
+    });
+</script>
+
+</body>
+</html>
