@@ -370,27 +370,34 @@
                 <div class="esc-logo">ESC</div>
             </div>
         </header>
-
-        <div class="dashboard-body">
-            
-            <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                
-                <div class="card summary-card">
-                    <div class="summary-title">Total Estudiantes</div>
-                    <div class="summary-value">29</div>
-                </div>
-
-                <div class="card summary-card">
-                    <div class="summary-title">Top 3 en notas</div>
-                    <ul class="best-students-list">
-                        <li>Alisson</li>
-                        <li>Camila</li>
-                        <li>José</li>
-                    </ul>
-                </div>
-
-                <div class="card" style="border: 1px dashed #ccc; background: none; box-shadow: none;"></div>
+<!-- /////////////////////////// -->
+     <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    
+    <div class="card summary-card" style="text-align: left; padding: 15px; background: #fff; border-left: 5px solid var(--azul);">
+        <div id="info-profesor">
+            <h3 style="margin: 0; color: var(--gris-texto);" id="nombre-docente">Cargando...</h3>
+            <p style="margin: 5px 0; font-weight: bold; color: #666;" id="curso-docente">Cargando curso...</p>
+            <div id="banner-noticias" style="margin-top: 10px; padding: 10px; background: #f0f4ff; border-radius: 5px; font-size: 0.8rem; border: 1px dashed #5c6bc0;">
+                📢 <strong>Noticia:</strong> ¡Mañana no hay clases por feriado!
             </div>
+        </div>
+    </div>
+
+    <div class="card summary-card">
+        <div class="summary-title">Total Estudiantes</div>
+        <div class="summary-value" id="total-estudiantes-count">0</div>
+    </div>
+
+    <div class="card summary-card">
+        <div class="summary-title">Top 3 en Notas</div>
+        <ul class="best-students-list">
+            <li>Alisson</li>
+            <li>Camila</li>
+            <li>José</li>
+        </ul>
+    </div>
+</div>
+        <!-- ////////////////////////////// -->
 
             <div class="cards-grid">
                 
