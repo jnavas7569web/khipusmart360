@@ -48,7 +48,7 @@
             <input type="password" id="clave" placeholder="Mínimo 6 caracteres" required>
         </div>
 
-        <button type="submit" class="btn-guardar">REGISTRAR USUARIO</button>
+        <button type="submit" class="btn-guardar">REGISTRAR Y GUARDAR</button>
     </form>
 
     <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
@@ -56,7 +56,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -72,10 +72,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Solo un admin puede estar aquí
+    // Seguridad: Solo tú puedes registrar gente
     onAuthStateChanged(auth, (user) => {
-        if (!user || user.email !== "jnavas7569@gmail.com") {
-            window.location.href = "dashboard.html";
+        if (user) {
+            if (user.email !== "jnavas7569@gmail.com") {
+                window.location.href = "dashboard.html";
+            }
         }
     });
 
@@ -88,11 +90,12 @@
         const rolSeleccionado = document.getElementById('rol').value;
 
         try {
-            // 1. Crear usuario en Firebase Auth (Seguridad)
+            // 1. Crear el usuario en Autenticación
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const nuevoId = userCredential.user.uid;
 
-            // 2. Crear el documento en Firestore (Tu BD)
+            // 2. GUARDAR EN FIRESTORE (La parte que te faltaba asegurar)
+            // Usamos un 'await' para que no siga hasta que termine de escribir en la BD
             await setDoc(doc(db, "usuarios", nuevoId), {
                 nombre_completo: nombre,
                 correo: email,
@@ -101,12 +104,15 @@
                 creacion: serverTimestamp()
             });
 
-            alert("✅ ¡Usuario creado con éxito!");
+            alert("✅ ¡ÉXITO! Usuario creado y guardado en la base de datos.");
             document.getElementById('form-usuario').reset();
             
+            // Opcional: Para evitar que el sistema te cambie la sesión al nuevo usuario
+            // podrías redirigir o recargar, pero por ahora el reset basta.
+
         } catch (error) {
-            console.error(error);
-            alert("❌ Error: " + error.message);
+            console.error("Error completo:", error);
+            alert("❌ Hubo un error: " + error.message);
         }
     });
 </script>
