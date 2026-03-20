@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhipuSmart360 - Registro Estudiantes</title>
+    <title>KhipuSmart360 - Registro/Edición</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; }
+        :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; --verde: #4caf50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 15px; display: flex; justify-content: center; }
         .container { max-width: 600px; width: 100%; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { color: var(--azul); text-align: center; margin-bottom: 20px; }
@@ -16,7 +16,7 @@
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9rem; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
         .btn-registrar { width: 100%; padding: 15px; background: var(--naranja); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
-        .btn-registrar:hover { background: #ffa726; }
+        .btn-actualizar { background: var(--verde); }
         .btn-volver { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 0.9rem; }
         @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
@@ -24,41 +24,18 @@
 <body>
 
 <div class="container">
-    <h2><i class="fa-solid fa-user-plus"></i> Registro de Estudiante</h2>
+    <h2 id="main-title"><i class="fa-solid fa-user-plus"></i> Registro de Estudiante</h2>
     
     <form id="form-estudiante">
         <h3>Datos del Estudiante</h3>
         <div class="grid-2">
-            <div class="form-group">
-                <label>Nombres:</label>
-                <input type="text" id="nombres" placeholder="Ej: Alisson Briggitte" required>
-            </div>
-            <div class="form-group">
-                <label>Apellidos:</label>
-                <input type="text" id="apellidos" placeholder="Ej: Osorio Morales" required>
-            </div>
+            <div class="form-group"><label>Nombres:</label><input type="text" id="nombres" required></div>
+            <div class="form-group"><label>Apellidos:</label><input type="text" id="apellidos" required></div>
         </div>
 
         <div class="grid-2">
-            <div class="form-group">
-                <label>Cédula:</label>
-                <input type="number" id="cedula" placeholder="1310..." required>
-            </div>
-            <div class="form-group">
-                <label>Fecha Nacimiento:</label>
-                <input type="date" id="fecha_nacimiento" required>
-            </div>
-        </div>
-
-        <div class="grid-2">
-            <div class="form-group">
-                <label>Grado / Año:</label>
-                <select id="select-grado" required><option value="">Seleccione...</option></select>
-            </div>
-            <div class="form-group">
-                <label>Paralelo:</label>
-                <select id="select-paralelo" required><option value="">Seleccione...</option></select>
-            </div>
+            <div class="form-group"><label>Cédula:</label><input type="number" id="cedula" required></div>
+            <div class="form-group"><label>Fecha Nacimiento:</label><input type="date" id="fecha_nacimiento" required></div>
         </div>
 
         <div class="form-group">
@@ -70,16 +47,10 @@
         </div>
 
         <h3>Datos del Representante</h3>
-        <div class="form-group">
-            <label>Nombre del Representante:</label>
-            <input type="text" id="representante" placeholder="Ej: Carmen Morales" required>
-        </div>
+        <div class="form-group"><label>Nombre del Representante:</label><input type="text" id="representante" required></div>
         
         <div class="grid-2">
-            <div class="form-group">
-                <label>Cédula Representante:</label>
-                <input type="number" id="representante_cedula" placeholder="12345678" required>
-            </div>
+            <div class="form-group"><label>Cédula Repre.:</label><input type="number" id="representante_cedula" required></div>
             <div class="form-group">
                 <label>Parentesco:</label>
                 <select id="representante_parentesco" required>
@@ -87,26 +58,22 @@
                     <option value="Papá">Papá</option>
                     <option value="Abuelo/a">Abuelo/a</option>
                     <option value="Tío/a">Tío/a</option>
-                    <option value="Representante Legal">Representante Legal</option>
                 </select>
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Teléfono (WhatsApp):</label>
-            <input type="tel" id="telefono_representante" placeholder="0997652811" required>
-        </div>
+        <div class="form-group"><label>Teléfono (WhatsApp):</label><input type="tel" id="telefono_representante" required></div>
 
-        <button type="submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
+        <button type="submit" id="btn-submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
     </form>
 
-    <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Panel</a>
+    <a href="lista_estudiantes.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver a la Lista</a>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -122,38 +89,41 @@
     const db = getFirestore(app);
 
     let docenteId = "";
+    // 1. CAPTURAMOS EL ID DE LA URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             docenteId = user.uid;
-            cargarGrados();
-            cargarParalelos();
+            if (editId) cargarDatosEstudiante(editId);
         } else {
             window.location.href = "index.html";
         }
     });
 
-    async function cargarGrados() {
-        const selectGrado = document.getElementById('select-grado');
-        const q = query(collection(db, "grados"), orderBy("orden", "asc"));
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-            let opt = document.createElement('option');
-            opt.value = doc.id;
-            opt.innerHTML = doc.data().nombre;
-            selectGrado.appendChild(opt);
-        });
-    }
+    // 2. FUNCIÓN PARA LLENAR EL FORMULARIO SI ESTAMOS EDITANDO
+    async function cargarDatosEstudiante(id) {
+        const docRef = doc(db, "estudiantes", id);
+        const docSnap = await getDoc(docRef);
 
-    async function cargarParalelos() {
-        const selectParalelo = document.getElementById('select-paralelo');
-        const querySnapshot = await getDocs(collection(db, "paralelos"));
-        querySnapshot.forEach((doc) => {
-            let opt = document.createElement('option');
-            opt.value = doc.data().nombre;
-            opt.innerHTML = doc.data().nombre;
-            selectParalelo.appendChild(opt);
-        });
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById('main-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Editando Estudiante';
+            document.getElementById('btn-submit').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btn-submit').classList.add('btn-actualizar');
+
+            // Llenamos los campos
+            document.getElementById('nombres').value = data.nombres;
+            document.getElementById('apellidos').value = data.apellidos;
+            document.getElementById('cedula').value = data.cedula;
+            document.getElementById('fecha_nacimiento').value = data.fecha_nacimiento;
+            document.getElementById('estudiante_NEE').value = data.estudiante_NEE;
+            document.getElementById('representante').value = data.representante;
+            document.getElementById('representante_cedula').value = data.representante_cedula;
+            document.getElementById('representante_parentesco').value = data.representante_parentesco;
+            document.getElementById('telefono_representante').value = data.telefono_representante;
+        }
     }
 
     document.getElementById('form-estudiante').addEventListener('submit', async (e) => {
@@ -163,24 +133,29 @@
             nombres: document.getElementById('nombres').value,
             apellidos: document.getElementById('apellidos').value,
             cedula: document.getElementById('cedula').value,
-            estudiante_NEE: document.getElementById('estudiante_NEE').value,
             fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-            id_grado: document.getElementById('select-grado').value,
-            id_paralelo: document.getElementById('select-paralelo').value,
+            estudiante_NEE: document.getElementById('estudiante_NEE').value,
             representante: document.getElementById('representante').value,
             representante_cedula: document.getElementById('representante_cedula').value,
             representante_parentesco: document.getElementById('representante_parentesco').value,
             telefono_representante: document.getElementById('telefono_representante').value,
-            id_docente: docenteId,
-            fecha_registro: new Date()
+            id_docente: docenteId
         };
 
         try {
-            await addDoc(collection(db, "estudiantes"), data);
-            alert("✅ Estudiante registrado exitosamente.");
-            document.getElementById('form-estudiante').reset();
+            if (editId) {
+                // 3. SI EXISTE ID, ACTUALIZAMOS
+                await updateDoc(doc(db, "estudiantes", editId), data);
+                alert("✅ Estudiante actualizado con éxito.");
+                window.location.href = "lista_estudiantes.html";
+            } else {
+                // 4. SI NO, CREAMOS NUEVO
+                await addDoc(collection(db, "estudiantes"), data);
+                alert("✅ Estudiante registrado con éxito.");
+                document.getElementById('form-estudiante').reset();
+            }
         } catch (error) {
-            console.error("Error:", error);
+            console.error(error);
             alert("❌ Error al guardar.");
         }
     });
