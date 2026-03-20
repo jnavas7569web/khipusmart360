@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KhipuSmart360 - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-900 flex items-center justify-center h-screen font-sans">
     <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-600">
@@ -24,53 +25,69 @@
             <button id="loginBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-700 transform hover:scale-[1.02] active:scale-95 transition shadow-lg mt-4 tracking-widest uppercase text-sm">
                 Ingresar al Sistema
             </button>
+            <!-- //////////////////////////// -->
+            <p style="text-align:center; margin-top:15px;">
+    <a href="#" id="btn-olvido" style="color: #5c6bc0; text-decoration:none; font-size: 0.9rem;">¿Olvidaste tu contraseña?</a>
+            </p>
+            <!-- ////////////////// -->
         </div>
         
         <p id="message" class="mt-6 text-center text-red-500 text-xs font-bold h-4 italic"></p>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    // IMPORTANTE: Asegúrate de añadir 'sendPasswordResetEmail' aquí arriba
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
-            authDomain: "khipusmart360.firebaseapp.com",
-            projectId: "khipusmart360",
-            storageBucket: "khipusmart360.firebasestorage.app",
-            messagingSenderId: "240593523716",
-            appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
-        };
+    const firebaseConfig = {
+        // ... tu configuración de siempre ...
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-        ////
-        // Limpiar campos al cargar la página por seguridad
-        document.getElementById('email').value = "";
-        document.getElementById('password').value = "";
-        /////
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const msg = document.getElementById('message');
-            
-            msg.innerText = "Verificando credenciales...";
+    // --- AQUÍ VA TU LÓGICA DE LOGIN NORMAL (btn-entrar) ---
+    // document.getElementById('btn-entrar').addEventListener('click', ... )
 
-         
-      
-            signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-         
-                    window.location.assign("./dashboard.html");
-                })
-                .catch((error) => {
-                    msg.classList.remove('text-green-500');
-                    msg.classList.add('text-red-500');
-                    msg.innerText = "Error: Usuario o clave incorrectos";
-                });     
-           
+
+    // --- AQUÍ PEGAS LA FUNCIÓN DE RECUPERAR CLAVE ---
+    document.getElementById('btn-olvido').addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 1. Pedimos el correo con SweetAlert2
+        const { value: email } = await Swal.fire({
+            title: 'Recuperar Acceso',
+            text: 'Escribe tu correo para enviarte un enlace de restauración.',
+            input: 'email',
+            inputPlaceholder: 'ejemplo@correo.com',
+            confirmButtonColor: '#5c6bc0',
+            confirmButtonText: 'Enviar enlace',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar'
         });
-    </script>
+
+        // 2. Si el usuario escribió un correo, procedemos
+        if (email) {
+            try {
+                // Función mágica de Firebase para enviar el correo
+                await sendPasswordResetEmail(auth, email);
+                
+                Swal.fire({
+                    title: '¡Correo Enviado!',
+                    text: 'KhipuSmart Informa: Revisa tu bandeja de entrada o spam para cambiar tu clave.',
+                    icon: 'success',
+                    confirmButtonColor: '#5c6bc0'
+                });
+            } catch (error) {
+                console.error(error);
+                let mensaje = "No pudimos enviar el correo.";
+                if (error.code === 'auth/user-not-found') mensaje = "Este correo no está registrado.";
+                
+                Swal.fire('Error', mensaje, 'error');
+            }
+        }
+    });
+</script>
 </body>
 </html>
