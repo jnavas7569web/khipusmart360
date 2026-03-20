@@ -454,44 +454,45 @@
 
 // bloqueioo
 <script type="module">
-  // 1. Importamos las herramientas de Firebase (asegúrate de que estas rutas sean las mismas que usaste en el login)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  // 2. Tu configuración de Firebase (LA MISMA que usaste en el login)
-const firebaseConfig = {
-    apiKey: "AIzaSy...", 
-    authDomain: "khipusmart360.firebaseapp.com",
+  // --- TUS CREDENCIALES REALES AQUÍ ---
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY_REAL",
+    authDomain: "TU_AUTH_DOMAIN_REAL",
     projectId: "khipusmart360",
     storageBucket: "khipusmart360.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+    messagingSenderId: "TU_ID_REAL",
+    appId: "TU_APP_ID_REAL"
   };
 
-  // 3. Inicializamos Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // 4. EL GUARDIA: Vigila si el usuario está autenticado
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // El usuario ha iniciado sesión, ¡puedes quedarte!
-      console.log("Bienvenido: ", user.email);
-    } else {
-      // ¡ALERTA! No hay sesión activa. Expulsando al login...
-      window.location.href = "index.html"; 
-    }
-  });
-
-  // 5. Función para el botón de SALIR
-  const btnSalir = document.querySelector('.btn-salir');
-  btnSalir.addEventListener('click', () => {
-    auth.signOut().then(() => {
-      window.location.href = "index.html";
+  // Forzamos a que la sesión se guarde en el navegador
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      // Vigilante de sesión
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          console.log("Sesión activa para:", user.email);
+          // Opcional: Aquí podemos poner el nombre en el Dashboard mañana
+        } else {
+          console.log("No hay sesión, redirigiendo...");
+          window.location.href = "index.html";
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Error de persistencia:", error);
     });
+
+  // Botón Salir
+  document.querySelector('.btn-salir').addEventListener('click', () => {
+    auth.signOut().then(() => { window.location.href = "index.html"; });
   });
 </script>
-
 //
     
 </body>
