@@ -6,46 +6,135 @@
     <title>KhipuSmart360 - Registro Estudiantes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; }
-        body { font-family: sans-serif; background: var(--gris-fondo); margin: 0; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { color: var(--azul); text-align: center; margin-top: 0; }
+        :root { 
+            --naranja: #ffb74d; 
+            --gris-fondo: #f4f7f6; 
+            --blanco: #ffffff; 
+            --azul: #5c6bc0; 
+            --gris-texto: #333;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--gris-fondo); 
+            margin: 0; 
+            padding: 15px; 
+            display: flex;
+            justify-content: center;
+        }
+        .container { 
+            max-width: 600px; 
+            width: 100%;
+            background: var(--blanco); 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+        h2 { color: var(--azul); text-align: center; margin-top: 0; font-size: 1.5rem; }
+        h3 { color: var(--azul); font-size: 1rem; border-bottom: 2px solid var(--gris-fondo); padding-bottom: 5px; margin-top: 20px; }
+        
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        .btn-registrar { width: 100%; padding: 12px; background: var(--naranja); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9rem; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 1rem;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: var(--azul); }
+        
+        .btn-registrar { 
+            width: 100%; 
+            padding: 15px; 
+            background: var(--naranja); 
+            border: none; 
+            color: white; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            margin-top: 20px; 
+            transition: background 0.3s;
+        }
         .btn-registrar:hover { background: #ffa726; }
-        .btn-volver { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #888; font-size: 0.9rem; }
+        
+        .btn-volver { 
+            display: block; 
+            text-align: center; 
+            margin-top: 20px; 
+            text-decoration: none; 
+            color: #888; 
+            font-size: 0.9rem; 
+        }
+        
+        /* Estilos para móviles */
+        @media (max-width: 480px) {
+            .grid-2 { grid-template-columns: 1fr; gap: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2><i class="fa-solid fa-user-plus"></i> Nuevo Estudiante</h2>
+    <h2><i class="fa-solid fa-user-plus"></i> Registro de Estudiante</h2>
+    
     <form id="form-estudiante">
-        <div class="form-group">
-            <label>Nombres y Apellidos:</label>
-            <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+        <h3>Datos Personales</h3>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Nombres:</label>
+                <input type="text" id="nombres" placeholder="Ej: Juan Alberto" required>
+            </div>
+            <div class="form-group">
+                <label>Apellidos:</label>
+                <input type="text" id="apellidos" placeholder="Ej: Pérez Castro" required>
+            </div>
         </div>
-        <div class="form-group">
-            <label>N° de Cédula:</label>
-            <input type="number" id="cedula" placeholder="1312345678" required>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Cédula:</label>
+                <input type="number" id="cedula" placeholder="1312345678" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha Nacimiento:</label>
+                <input type="date" id="fecha_nacimiento" required>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Grado / Año:</label>
-            <select id="select-grado" required>
-                <option value="">Seleccione un grado...</option>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Grado / Año:</label>
+                <select id="select-grado" required>
+                    <option value="">Seleccione...</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Paralelo:</label>
+                <select id="select-paralelo" required>
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+        </div>
+
+        <h3>Datos del Representante</h3>
+        <div class="form-group">
+            <label>Nombre del Representante:</label>
+            <input type="text" id="representante" placeholder="Ej: María Castro" required>
         </div>
         <div class="form-group">
-            <label>Paralelo:</label>
-            <select id="select-paralelo" required>
-                <option value="">Seleccione paralelo...</option>
-                </select>
+            <label>Teléfono (WhatsApp):</label>
+            <input type="tel" id="telefono_representante" placeholder="0987654321" required>
         </div>
-        <button type="submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
+
+        <button type="submit" class="btn-registrar">GUARDAR EN FIREBASE</button>
     </form>
-    <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
+
+    <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Panel</a>
 </div>
 
 <script type="module">
@@ -53,7 +142,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // --- TUS CREDENCIALES (Copia las mismas de tu dashboard) ---
+    // TUS CREDENCIALES REALES
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
         authDomain: "khipusmart360.firebaseapp.com",
@@ -67,13 +156,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let docenteId = ""; // Aquí guardaremos tu ID automáticamente
+    let docenteId = "";
 
-    // 1. SEGURIDAD Y OBTENER ID DOCENTE
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            docenteId = user.uid; // El ID único de quien está logueado
-            console.log("Registrando como docente:", docenteId);
+            docenteId = user.uid;
+            console.log("Sesión activa como:", docenteId);
             cargarGrados();
             cargarParalelos();
         } else {
@@ -81,51 +169,52 @@
         }
     });
 
-    // 2. CARGAR GRADOS DESDE TU COLECCIÓN 'grados'
     async function cargarGrados() {
         const selectGrado = document.getElementById('select-grado');
         const q = query(collection(db, "grados"), orderBy("orden", "asc"));
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
             let opt = document.createElement('option');
-            opt.value = doc.id; // El ID de Firebase (ej: 1, 2, 3...)
+            opt.value = doc.id;
             opt.innerHTML = doc.data().nombre;
             selectGrado.appendChild(opt);
         });
     }
 
-    // 3. CARGAR PARALELOS DESDE TU COLECCIÓN 'paralelos'
     async function cargarParalelos() {
         const selectParalelo = document.getElementById('select-paralelo');
         const querySnapshot = await getDocs(collection(db, "paralelos"));
         querySnapshot.forEach((doc) => {
             let opt = document.createElement('option');
-            opt.value = doc.data().nombre; 
+            opt.value = doc.data().nombre;
             opt.innerHTML = doc.data().nombre;
             selectParalelo.appendChild(opt);
         });
     }
 
-    // 4. GUARDAR ESTUDIANTE EN FIREBASE
     document.getElementById('form-estudiante').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const nuevoEstudiante = {
-            nombre: document.getElementById('nombre').value,
+        const data = {
+            nombres: document.getElementById('nombres').value,
+            apellidos: document.getElementById('apellidos').value,
             cedula: document.getElementById('cedula').value,
+            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
             id_grado: document.getElementById('select-grado').value,
-            paralelo: document.getElementById('select-paralelo').value,
-            id_docente: docenteId, // SE ASOCIA AUTOMÁTICAMENTE
+            id_paralelo: document.getElementById('select-paralelo').value,
+            representante: document.getElementById('representante').value,
+            telefono_representante: document.getElementById('telefono_representante').value,
+            id_docente: docenteId,
             fecha_registro: new Date()
         };
 
         try {
-            await addDoc(collection(db, "estudiantes"), nuevoEstudiante);
-            alert("✅ Estudiante registrado con éxito en KhipuSmart360");
+            await addDoc(collection(db, "estudiantes"), data);
+            alert("✅ ¡Estudiante guardado exitosamente!");
             document.getElementById('form-estudiante').reset();
         } catch (error) {
             console.error("Error al guardar:", error);
-            alert("❌ Hubo un error al guardar.");
+            alert("❌ Hubo un problema al guardar los datos.");
         }
     });
 </script>
