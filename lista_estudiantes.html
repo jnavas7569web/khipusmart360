@@ -118,19 +118,38 @@
             // Ordenamos alfabéticamente por apellido
             lista.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
 
-            lista.forEach((est) => {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td style="font-weight: 500;">${est.apellidos} ${est.nombres}</td>
-                    <td>${est.cedula}</td>
-                    <td>${calcularEdad(est.fecha_nacimiento)} años</td>
-                    <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
-                    <td>
-                        <button class="btn btn-delete" data-id="${est.id}"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                cuerpo.appendChild(fila);
-            });
+           // --- ESTA ES LA PARTE DONDE SE CREAN LAS FILAS ---
+lista.forEach((est) => {
+    const fila = document.createElement('tr');
+    
+    // 1. Agregamos estilo de cursor para que el profe sepa que puede hacer clic
+    fila.style.cursor = "pointer";
+    fila.title = "Clic para editar a este estudiante";
+
+    fila.innerHTML = `
+        <td style="font-weight: 500;">
+            <i class="fa-solid fa-pen-to-square" style="color: #ccc; margin-right: 8px;"></i>
+            ${est.apellidos} ${est.nombres}
+        </td>
+        <td>${est.cedula}</td>
+        <td>${calcularEdad(est.fecha_nacimiento)} años</td>
+        <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
+        <td>
+            <button class="btn btn-delete" data-id="${est.id}"><i class="fa-solid fa-trash"></i></button>
+        </td>
+    `;
+
+    // 2. AGREGAMOS EL EVENTO DE CLIC PARA EDITAR
+    fila.addEventListener('click', (e) => {
+        // Si el clic fue en el botón rojo de borrar, NO entramos a editar
+        if (e.target.closest('.btn-delete')) return;
+        
+        // Redirigimos a la página de registro pasando el ID por la URL
+        window.location.href = `estudiantes.html?edit=${est.id}`;
+    });
+
+    cuerpo.appendChild(fila);
+});
 
             // Lógica para borrar
             document.querySelectorAll('.btn-delete').forEach(btn => {
