@@ -221,9 +221,10 @@
                     </div>
                 </div>
 
-                <div class="card" style="text-align: center;">
-                    <div class="summary-title">Total Estudiantes</div>
-                    <div class="summary-value" id="total-estudiantes-count">0</div>
+                  <div class="card stat-card card-naranja">
+                        <div class="stat-number" id="total-estudiantes">0</div>
+                            <div class="stat-label">Total Estudiantes</div>
+                        <i class="fa-solid fa-graduation-cap stat-icon"></i>
                 </div>
 
                 <div class="card" id="caja-top-estudiantes">
@@ -300,60 +301,74 @@
 </script>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    // Añadimos getCountFromServer, query, where y collection
+    import { getFirestore, doc, getDoc, collection, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
-            authDomain: "khipusmart360.firebaseapp.com",
-            projectId: "khipusmart360",
-            storageBucket: "khipusmart360.firebasestorage.app",
-            messagingSenderId: "240593523716",
-            appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    const docRef = doc(db, "usuarios", user.uid);
-                    const docSnap = await getDoc(docRef);
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const docRef = doc(db, "usuarios", user.uid);
+                const docSnap = await getDoc(docRef);
 
-                    const nombreDoc = document.getElementById('nombre-docente');
-                    const cursoDoc = document.getElementById('curso-docente');
-                    const cajaTop = document.getElementById('caja-top-estudiantes');
-                    const pAdmin = document.getElementById('panel-admin');
+                const nombreDoc = document.getElementById('nombre-docente');
+                const cursoDoc = document.getElementById('curso-docente');
+                const cajaTop = document.getElementById('caja-top-estudiantes');
+                const pAdmin = document.getElementById('panel-admin');
+                const totalEstEl = document.getElementById('total-estudiantes-count'); // ID de tu caja 2
 
-                    if (docSnap.exists()) {
-                        const d = docSnap.data();
-                        const pre = (d.rol === 'admin' || d.rol === 'superadmin') ? "Admin: " : "Prof. ";
-                        nombreDoc.innerText = pre + d.nombre_completo;
+                if (docSnap.exists()) {
+                    const d = docSnap.data();
+                    const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
+                    const pre = isAdmin ? "Admin: " : "Prof. ";
+                    nombreDoc.innerText = pre + d.nombre_completo;
 
-                        if (d.rol === 'admin' || d.rol === 'superadmin') {
-                            cursoDoc.innerText = "Gestión Global";
-                            cajaTop.style.display = 'none';
-                            pAdmin.style.display = 'block';
-                        } else {
-                            cursoDoc.innerText = "Docente Autorizado";
-                            cajaTop.style.display = 'block';
-                            pAdmin.style.display = 'none';
-                        }
+                    // --- LÓGICA DE CONTADOR DINÁMICO ---
+                    let q;
+                    if (isAdmin) {
+                        cursoDoc.innerText = "Gestión Global";
+                        cajaTop.style.display = 'none';
+                        pAdmin.style.display = 'block';
+                        // Admin cuenta TODOS los estudiantes
+                        q = query(collection(db, "estudiantes"));
                     } else {
-                        nombreDoc.innerText = "Usuario no registrado en BD";
+                        cursoDoc.innerText = "Docente Autorizado";
+                        cajaTop.style.display = 'block';
+                        pAdmin.style.display = 'none';
+                        // Profesor cuenta solo los SUYOS
+                        q = query(collection(db, "estudiantes"), where("id_docente", "==", user.uid));
                     }
-                } catch (e) { console.error(e); }
-            } else {
-                window.location.href = "index.html";
-            }
-        });
 
-        document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = "index.html");
-        });
-    </script>
+                    // Ejecutar el conteo en el servidor (Ahorra datos y es veloz)
+                    const snapshot = await getCountFromServer(q);
+                    if (totalEstEl) totalEstEl.innerText = snapshot.data().count;
+
+                } else {
+                    nombreDoc.innerText = "Usuario no registrado en BD";
+                }
+            } catch (e) { console.error("Error en Dashboard:", e); }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = "index.html");
+    });
+</script>
 </body>
 </html>
