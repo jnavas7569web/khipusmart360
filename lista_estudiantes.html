@@ -30,6 +30,33 @@
         <a href="dashboard.html" style="text-decoration:none; color:#888;"><i class="fa-solid fa-arrow-left"></i> Volver</a>
     </div>
 
+
+
+<!-- ----------------para filtarrrr -->
+<div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+    <div class="form-group">
+        <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--azul); margin-bottom: 5px;">
+            <i class="fa-solid fa-graduation-cap"></i> SELECCIONE GRADO:
+        </label>
+        <select id="select-grado-filtro" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            <option value="">Cargando grados...</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label style="display: block; font-size: 0.8rem; font-weight: bold; color: var(--azul); margin-bottom: 5px;">
+            <i class="fa-solid fa-chalkboard-user"></i> PARALELO:
+        </label>
+        <select id="select-paralelo-filtro" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            <option value="">Cargando...</option>
+        </select>
+    </div>
+</div>
+
+<!-- ------------------------------------------ -->
+
+
+    
+    
     <button id="btn-cargar" class="btn btn-cargar"><i class="fa-solid fa-sync" id="icon-sync"></i> CARGAR ESTUDIANTES</button>
 
     <div id="student-list-section">
