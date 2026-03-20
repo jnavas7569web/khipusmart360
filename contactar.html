@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Contactar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --azul: #5c6bc0; --verde-wa: #25D366; --gris-fondo: #f4f7f6; --blanco: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--blanco); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--azul); text-align: center; margin-bottom: 20px; }
+        
+        .filter-box { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #eee; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        label { font-size: 0.75rem; font-weight: bold; color: var(--azul); display: block; margin-bottom: 5px; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; }
+        
+        .btn-buscar { width: 100%; background: var(--azul); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        .contact-card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .contact-card:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .info-est { flex-grow: 1; }
+        .info-est p { margin: 0; font-size: 0.9rem; color: #333; font-weight: 600; }
+        .info-est span { font-size: 0.75rem; color: #888; }
+        
+        .actions { display: flex; gap: 10px; }
+        .btn-action { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-size: 1.1rem; }
+        .btn-wa { background: var(--verde-wa); }
+        .btn-tel { background: var(--azul); }
+        
+        .btn-volver { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fa-solid fa-address-book"></i> Directorio de Padres</h2>
+    
+    <div class="filter-box">
+        <div class="grid-2">
+            <div>
+                <label>GRADO:</label>
+                <select id="filtro-grado"><option value="">Cargando...</option></select>
+            </div>
+            <div>
+                <label>PARALELO:</label>
+                <select id="filtro-paralelo"><option value="">Cargando...</option></select>
+            </div>
+        </div>
+        <button class="btn-buscar" id="btn-buscar"><i class="fa-solid fa-magnifying-glass"></i> BUSCAR CONTACTOS</button>
+    </div>
+
+    <div id="lista-contactos">
+        <p style="text-align: center; color: #aaa; font-size: 0.9rem;">Seleccione un curso para ver los contactos.</p>
+    </div>
+
+    <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let docenteId = "";
+
+    async function cargarCatalogos() {
+        const snapGrados = await getDocs(collection(db, "grados"));
+        const sG = document.getElementById('filtro-grado');
+        sG.innerHTML = '<option value="">Grado...</option>';
+        snapGrados.forEach(d => sG.innerHTML += `<option value="${d.id}">${d.data().nombre || d.id}</option>`);
+
+        const snapParalelos = await getDocs(collection(db, "paralelos"));
+        const sP = document.getElementById('filtro-paralelo');
+        sP.innerHTML = '<option value="">Paralelo...</option>';
+        snapParalelos.forEach(d => sP.innerHTML += `<option value="${d.id}">${d.id}</option>`);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) { docenteId = user.uid; cargarCatalogos(); }
+        else { window.location.href = "index.html"; }
+    });
+
+    document.getElementById('btn-buscar').addEventListener('click', async () => {
+        const g = document.getElementById('filtro-grado').value;
+        const p = document.getElementById('filtro-paralelo').value;
+        const lista = document.getElementById('lista-contactos');
+
+        if(!g || !p) return Swal.fire('Aviso', 'Seleccione grado y paralelo', 'warning');
+
+        lista.innerHTML = "<p style='text-align:center;'>Buscando...</p>";
+
+        const q = query(collection(db, "estudiantes"), 
+                  where("id_docente", "==", docenteId),
+                  where("id_grado", "==", g),
+                  where("id_paralelo", "==", p));
+
+        const snap = await getDocs(q);
+        lista.innerHTML = "";
+
+        if(snap.empty) {
+            lista.innerHTML = "<p style='text-align:center; color:red;'>No hay estudiantes en este curso.</p>";
+            return;
+        }
+
+        snap.forEach(doc => {
+            const e = doc.data();
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.innerHTML = `
+                <div class="info-est">
+                    <p>${e.apellidos} ${e.nombres}</p>
+                    <span>Rep: ${e.representante}</span>
+                </div>
+                <div class="actions">
+                    <a href="https://wa.me/593${e.telefono_representante}" target="_blank" class="btn-action btn-wa"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="tel:+593${e.telefono_representante}" class="btn-action btn-tel"><i class="fa-solid fa-phone"></i></a>
+                </div>
+            `;
+            lista.appendChild(card);
+        });
+    });
+</script>
+</body>
+</html>
