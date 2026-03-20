@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KhipuSmart360 - Registro/Edición</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; --verde: #4caf50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 15px; display: flex; justify-content: center; }
@@ -17,7 +18,7 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
         .btn-registrar { width: 100%; padding: 15px; background: var(--naranja); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
         .btn-actualizar { background: var(--verde); }
-        .btn-volver { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 0.9rem; }
+        .btn-volver { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 0.8rem; }
         @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -36,6 +37,17 @@
         <div class="grid-2">
             <div class="form-group"><label>Cédula:</label><input type="number" id="cedula" required></div>
             <div class="form-group"><label>Fecha Nacimiento:</label><input type="date" id="fecha_nacimiento" required></div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Grado / Año:</label>
+                <select id="id_grado" required><option value="">Cargando...</option></select>
+            </div>
+            <div class="form-group">
+                <label>Paralelo:</label>
+                <select id="id_paralelo" required><option value="">Cargando...</option></select>
+            </div>
         </div>
 
         <div class="form-group">
@@ -67,14 +79,14 @@
         <button type="submit" id="btn-submit" class="btn-registrar">GUARDAR ESTUDIANTE</button>
     </form>
 
-    <a href="lista_estudiantes.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i>Listar estudiantes</a>
-      <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i>Volver al menú</a>
+    <a href="lista_estudiantes.html" class="btn-volver">← Listar estudiantes</a>
+    <a href="dashboard.html" class="btn-volver">← Volver al menú</a>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -90,35 +102,51 @@
     const db = getFirestore(app);
 
     let docenteId = "";
-    // 1. CAPTURAMOS EL ID DE LA URL
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');
+
+    // Función para cargar los selectores de la BD
+    async function cargarCatalogos() {
+        const sGrado = document.getElementById('id_grado');
+        const sParalelo = document.getElementById('id_paralelo');
+
+        const snapGrados = await getDocs(collection(db, "grados"));
+        sGrado.innerHTML = '<option value="">Seleccione...</option>';
+        snapGrados.forEach(d => sGrado.innerHTML += `<option value="${d.id}">${d.data().nombre || d.id}</option>`);
+
+        const snapParalelos = await getDocs(collection(db, "paralelos"));
+        sParalelo.innerHTML = '<option value="">Seleccione...</option>';
+        snapParalelos.forEach(d => {
+            const p = d.data().nombre || d.id;
+            sParalelo.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             docenteId = user.uid;
+            await cargarCatalogos();
             if (editId) cargarDatosEstudiante(editId);
         } else {
             window.location.href = "index.html";
         }
     });
 
-    // 2. FUNCIÓN PARA LLENAR EL FORMULARIO SI ESTAMOS EDITANDO
     async function cargarDatosEstudiante(id) {
-        const docRef = doc(db, "estudiantes", id);
-        const docSnap = await getDoc(docRef);
-
+        const docSnap = await getDoc(doc(db, "estudiantes", id));
         if (docSnap.exists()) {
             const data = docSnap.data();
             document.getElementById('main-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Editando Estudiante';
             document.getElementById('btn-submit').innerText = "ACTUALIZAR DATOS";
             document.getElementById('btn-submit').classList.add('btn-actualizar');
 
-            // Llenamos los campos
+            // Rellenar campos
             document.getElementById('nombres').value = data.nombres;
             document.getElementById('apellidos').value = data.apellidos;
             document.getElementById('cedula').value = data.cedula;
             document.getElementById('fecha_nacimiento').value = data.fecha_nacimiento;
+            document.getElementById('id_grado').value = data.id_grado || "";
+            document.getElementById('id_paralelo').value = data.id_paralelo || "";
             document.getElementById('estudiante_NEE').value = data.estudiante_NEE;
             document.getElementById('representante').value = data.representante;
             document.getElementById('representante_cedula').value = data.representante_cedula;
@@ -135,6 +163,8 @@
             apellidos: document.getElementById('apellidos').value,
             cedula: document.getElementById('cedula').value,
             fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+            id_grado: document.getElementById('id_grado').value,
+            id_paralelo: document.getElementById('id_paralelo').value,
             estudiante_NEE: document.getElementById('estudiante_NEE').value,
             representante: document.getElementById('representante').value,
             representante_cedula: document.getElementById('representante_cedula').value,
@@ -145,19 +175,16 @@
 
         try {
             if (editId) {
-                // 3. SI EXISTE ID, ACTUALIZAMOS
                 await updateDoc(doc(db, "estudiantes", editId), data);
-                alert("✅ Estudiante actualizado con éxito.");
-                window.location.href = "lista_estudiantes.html";
+                Swal.fire({ title: 'KhipuSmart Informa', text: 'Datos actualizados con éxito.', icon: 'success' })
+                .then(() => window.location.href = "lista_estudiantes.html");
             } else {
-                // 4. SI NO, CREAMOS NUEVO
                 await addDoc(collection(db, "estudiantes"), data);
-                alert("✅ Estudiante registrado con éxito.");
+                Swal.fire({ title: 'KhipuSmart Informa', text: 'Estudiante registrado con éxito.', icon: 'success' });
                 document.getElementById('form-estudiante').reset();
             }
         } catch (error) {
-            console.error(error);
-            alert("❌ Error al guardar.");
+            Swal.fire('Error', 'No se pudo guardar la información.', 'error');
         }
     });
 </script>
