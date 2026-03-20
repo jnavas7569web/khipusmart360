@@ -10,24 +10,15 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 1000px; width: 100%; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        
-        /* Tabla */
         .table-responsive { overflow-x: auto; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: var(--azul); font-size: 0.8rem; }
-        tr:hover { background: #f1f3f9; cursor: pointer; }
-        
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; text-transform: capitalize; }
+        th { background: #f8f9fa; color: var(--azul); font-size: 0.8rem; text-transform: uppercase; }
         .nee-si { background: var(--rojo); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-        
-        /* Botones */
         .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .btn-cargar { background: var(--naranja); color: white; margin: 0 auto; }
         .btn-nuevo { background: var(--azul); color: white; margin: 20px auto; }
-        .btn-accion { padding: 5px 10px; font-size: 0.8rem; }
-        .btn-edit { background: #4caf50; color: white; }
-        .btn-delete { background: var(--rojo); color: white; }
-
+        .btn-delete { background: var(--rojo); color: white; padding: 5px 10px; font-size: 0.8rem; }
         #student-list-section { display: none; }
     </style>
 </head>
@@ -35,14 +26,14 @@
 
 <div class="container">
     <div class="header">
-        <h2><i class="fa-solid fa-users-viewfinder"></i> Estudiantes</h2>
+        <h2><i class="fa-solid fa-users-viewfinder"></i> Mi Nómina</h2>
         <a href="dashboard.html" style="text-decoration:none; color:#888;"><i class="fa-solid fa-arrow-left"></i> Volver</a>
     </div>
 
-    <button id="btn-cargar" class="btn btn-cargar"><i class="fa-solid fa-sync"></i> CARGAR ESTUDIANTES</button>
+    <button id="btn-cargar" class="btn btn-cargar"><i class="fa-solid fa-sync" id="icon-sync"></i> CARGAR ESTUDIANTES</button>
 
     <div id="student-list-section">
-        <h3 id="course-title" style="margin-top:20px; color:#555;">Mi Curso</h3>
+        <h3 id="course-title" style="margin-top:20px; color:#555;">Estudiantes Registrados</h3>
         
         <div class="table-responsive">
             <table>
@@ -68,7 +59,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, where, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -86,61 +77,78 @@
     let docenteId = "";
 
     onAuthStateChanged(auth, (user) => {
-        if (user) { docenteId = user.uid; } 
+        if (user) { docenteId = user.uid; console.log("ID Docente Detectado:", docenteId); } 
         else { window.location.href = "index.html"; }
     });
 
-    function calcularEdad(fecha) {
-        if(!fecha) return "-";
+    function calcularEdad(fechaStr) {
+        if(!fechaStr) return "N/D";
         const hoy = new Date();
-        const cumple = new Date(fecha);
+        const cumple = new Date(fechaStr);
         let edad = hoy.getFullYear() - cumple.getFullYear();
         if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() == cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
-        return edad;
+        return isNaN(edad) ? "Error" : edad;
     }
 
     document.getElementById('btn-cargar').addEventListener('click', async () => {
         const cuerpo = document.getElementById('lista-cuerpo');
-        cuerpo.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
+        const icon = document.getElementById('icon-sync');
+        
+        icon.classList.add('fa-spin'); // Animación de carga
+        cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Buscando en la base de datos...</td></tr>";
         document.getElementById('student-list-section').style.display = "block";
 
-        const q = query(collection(db, "estudiantes"), where("id_docente", "==", docenteId), orderBy("apellidos", "asc"));
-        const snapshot = await getDocs(q);
-        cuerpo.innerHTML = "";
+        try {
+            // CONSULTA SIMPLIFICADA (Para evitar errores de índice)
+            const q = query(collection(db, "estudiantes"), where("id_docente", "==", docenteId));
+            const snapshot = await getDocs(q);
+            
+            cuerpo.innerHTML = "";
+            icon.classList.remove('fa-spin');
 
-        snapshot.forEach((snapshotDoc) => {
-            const est = snapshotDoc.data();
-            const id = snapshotDoc.id;
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td>${est.apellidos} ${est.nombres}</td>
-                <td>${est.cedula}</td>
-                <td>${calcularEdad(est.fecha_nacimiento)} años</td>
-                <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
-                <td>
-                    <button class="btn btn-accion btn-delete" data-id="${id}"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            `;
-            // Al hacer click en la fila (excepto en el botón borrar), podríamos editar
-            fila.onclick = (e) => {
-                if(!e.target.closest('.btn-delete')) {
-                    alert("Función de edición: En desarrollo para conectar con tu form.");
-                }
-            };
-            cuerpo.appendChild(fila);
-        });
+            if (snapshot.empty) {
+                cuerpo.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No tienes estudiantes registrados aún.</td></tr>";
+                return;
+            }
 
-        // Eventos para borrar
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const idEliminar = e.currentTarget.getAttribute('data-id');
-                if(confirm("¿Seguro que deseas eliminar este estudiante?")) {
-                    await deleteDoc(doc(db, "estudiantes", idEliminar));
-                    btn.closest('tr').remove();
-                    alert("Eliminado de la base de datos.");
-                }
+            // Guardamos en un array para ordenar con JS
+            let lista = [];
+            snapshot.forEach(d => lista.push({ id: d.id, ...d.data() }));
+            
+            // Ordenamos alfabéticamente por apellido
+            lista.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
+
+            lista.forEach((est) => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td style="font-weight: 500;">${est.apellidos} ${est.nombres}</td>
+                    <td>${est.cedula}</td>
+                    <td>${calcularEdad(est.fecha_nacimiento)} años</td>
+                    <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
+                    <td>
+                        <button class="btn btn-delete" data-id="${est.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                cuerpo.appendChild(fila);
             });
-        });
+
+            // Lógica para borrar
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    if(confirm("¿Seguro que deseas eliminar este estudiante?")) {
+                        await deleteDoc(doc(db, "estudiantes", id));
+                        btn.closest('tr').remove();
+                    }
+                };
+            });
+
+        } catch (error) {
+            console.error("Error al cargar:", error);
+            cuerpo.innerHTML = `<tr><td colspan='5' style='color:red;'>Error: ${error.message}</td></tr>`;
+            icon.classList.remove('fa-spin');
+        }
     });
 </script>
 </body>
