@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhipuSmart360 - Gestión de Usuarios</title>
+    <title>KhipuSmart360 - Registro de Personal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --verde: #2e7d32; --gris-fondo: #f4f7f6; --blanco: #ffffff; --azul: #5c6bc0; }
@@ -22,19 +22,17 @@
 
 <div class="container">
     <h2><i class="fa-solid fa-user-shield"></i> Nuevo Usuario</h2>
-    <p style="text-align: center; color: #666; font-size: 0.9rem;">Registrar nuevo personal administrativo o docente.</p>
+    <p style="text-align: center; color: #666; font-size: 0.9rem;">Registrar personal sin cerrar tu sesión de Admin.</p>
     
     <form id="form-usuario">
         <div class="form-group">
             <label>Nombre Completo:</label>
-            <input type="text" id="nombre_completo" placeholder="Ej: Maria Auxiliadora" required>
+            <input type="text" id="nombre_completo" placeholder="Ej: Carlos Pérez" required>
         </div>
-
         <div class="form-group">
             <label>Correo Electrónico:</label>
             <input type="email" id="correo" placeholder="correo@ejemplo.com" required>
         </div>
-
         <div class="form-group">
             <label>Rol del Sistema:</label>
             <select id="rol" required>
@@ -42,15 +40,12 @@
                 <option value="admin">Administrador</option>
             </select>
         </div>
-
         <div class="form-group">
             <label>Contraseña Temporal:</label>
             <input type="password" id="clave" placeholder="Mínimo 6 caracteres" required>
         </div>
-
-        <button type="submit" class="btn-guardar">REGISTRAR Y GUARDAR</button>
+        <button type="submit" class="btn-guardar" id="btn-submit">REGISTRAR USUARIO</button>
     </form>
-
     <a href="dashboard.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
 </div>
 
@@ -68,34 +63,39 @@
         appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
     };
 
+    // 1. Iniciamos la App principal (Tu sesión)
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Seguridad: Solo tú puedes registrar gente
+    // 2. Iniciamos una App "Fantasma" para crear el nuevo usuario sin afectarte
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
+
+    // Seguridad: Solo tú puedes estar aquí
     onAuthStateChanged(auth, (user) => {
-        if (user) {
-            if (user.email !== "jnavas7569@gmail.com") {
-                window.location.href = "dashboard.html";
-            }
+        if (user && user.email !== "jnavas7569@gmail.com") {
+            window.location.href = "dashboard.html";
         }
     });
 
     document.getElementById('form-usuario').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+        const btn = document.getElementById('btn-submit');
+        btn.disabled = true;
+        btn.innerText = "Guardando...";
+
         const email = document.getElementById('correo').value;
         const password = document.getElementById('clave').value;
         const nombre = document.getElementById('nombre_completo').value;
         const rolSeleccionado = document.getElementById('rol').value;
 
         try {
-            // 1. Crear el usuario en Autenticación
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // USAMOS secondaryAuth PARA QUE NO TE CIERRE TU SESIÓN
+            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
             const nuevoId = userCredential.user.uid;
 
-            // 2. GUARDAR EN FIRESTORE (La parte que te faltaba asegurar)
-            // Usamos un 'await' para que no siga hasta que termine de escribir en la BD
+            // Guardamos en la base de datos (con la app principal para usar tus permisos)
             await setDoc(doc(db, "usuarios", nuevoId), {
                 nombre_completo: nombre,
                 correo: email,
@@ -104,15 +104,18 @@
                 creacion: serverTimestamp()
             });
 
-            alert("✅ ¡ÉXITO! Usuario creado y guardado en la base de datos.");
+            // IMPORTANTE: Cerramos la sesión del usuario que acabamos de crear en la app secundaria
+            await signOut(secondaryAuth);
+
+            alert("✅ ¡Usuario '" + nombre + "' registrado con éxito! Tu sesión de Admin sigue activa.");
             document.getElementById('form-usuario').reset();
             
-            // Opcional: Para evitar que el sistema te cambie la sesión al nuevo usuario
-            // podrías redirigir o recargar, pero por ahora el reset basta.
-
         } catch (error) {
-            console.error("Error completo:", error);
-            alert("❌ Hubo un error: " + error.message);
+            console.error("Error:", error);
+            alert("❌ Fallo: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "REGISTRAR USUARIO";
         }
     });
 </script>
