@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Nómina</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --azul: #5c6bc0; --naranja: #ffb74d; --gris-fondo: #f4f7f6; --blanco: #ffffff; --rojo: #ef5350; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris-fondo); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 1000px; width: 100%; background: var(--blanco); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* Tabla */
+        .table-responsive { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: var(--azul); font-size: 0.8rem; }
+        tr:hover { background: #f1f3f9; cursor: pointer; }
+        
+        .nee-si { background: var(--rojo); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+        
+        /* Botones */
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-cargar { background: var(--naranja); color: white; margin: 0 auto; }
+        .btn-nuevo { background: var(--azul); color: white; margin: 20px auto; }
+        .btn-accion { padding: 5px 10px; font-size: 0.8rem; }
+        .btn-edit { background: #4caf50; color: white; }
+        .btn-delete { background: var(--rojo); color: white; }
+
+        #student-list-section { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2><i class="fa-solid fa-users-viewfinder"></i> Estudiantes</h2>
+        <a href="dashboard.html" style="text-decoration:none; color:#888;"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+    </div>
+
+    <button id="btn-cargar" class="btn btn-cargar"><i class="fa-solid fa-sync"></i> CARGAR ESTUDIANTES</button>
+
+    <div id="student-list-section">
+        <h3 id="course-title" style="margin-top:20px; color:#555;">Mi Curso</h3>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Apellidos y Nombres</th>
+                        <th>Cédula</th>
+                        <th>Edad</th>
+                        <th>NEE</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-cuerpo"></tbody>
+            </table>
+        </div>
+
+        <button onclick="window.location.href='estudiantes.html'" class="btn btn-nuevo">
+            <i class="fa-solid fa-user-plus"></i> AÑADIR NUEVO ESTUDIANTE
+        </button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let docenteId = "";
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) { docenteId = user.uid; } 
+        else { window.location.href = "index.html"; }
+    });
+
+    function calcularEdad(fecha) {
+        if(!fecha) return "-";
+        const hoy = new Date();
+        const cumple = new Date(fecha);
+        let edad = hoy.getFullYear() - cumple.getFullYear();
+        if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() == cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
+        return edad;
+    }
+
+    document.getElementById('btn-cargar').addEventListener('click', async () => {
+        const cuerpo = document.getElementById('lista-cuerpo');
+        cuerpo.innerHTML = "<tr><td colspan='5'>Cargando...</td></tr>";
+        document.getElementById('student-list-section').style.display = "block";
+
+        const q = query(collection(db, "estudiantes"), where("id_docente", "==", docenteId), orderBy("apellidos", "asc"));
+        const snapshot = await getDocs(q);
+        cuerpo.innerHTML = "";
+
+        snapshot.forEach((snapshotDoc) => {
+            const est = snapshotDoc.data();
+            const id = snapshotDoc.id;
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>${est.apellidos} ${est.nombres}</td>
+                <td>${est.cedula}</td>
+                <td>${calcularEdad(est.fecha_nacimiento)} años</td>
+                <td>${est.estudiante_NEE === 'si' ? '<span class="nee-si">SÍ</span>' : 'NO'}</td>
+                <td>
+                    <button class="btn btn-accion btn-delete" data-id="${id}"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            // Al hacer click en la fila (excepto en el botón borrar), podríamos editar
+            fila.onclick = (e) => {
+                if(!e.target.closest('.btn-delete')) {
+                    alert("Función de edición: En desarrollo para conectar con tu form.");
+                }
+            };
+            cuerpo.appendChild(fila);
+        });
+
+        // Eventos para borrar
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const idEliminar = e.currentTarget.getAttribute('data-id');
+                if(confirm("¿Seguro que deseas eliminar este estudiante?")) {
+                    await deleteDoc(doc(db, "estudiantes", idEliminar));
+                    btn.closest('tr').remove();
+                    alert("Eliminado de la base de datos.");
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
