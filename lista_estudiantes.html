@@ -12,7 +12,6 @@
         body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
         .header-admin { background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); }
         .badge-docente { background: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9; }
-        /* Forzar color negro en toda la tabla */
         .texto-matriz { color: #1a1a1a !important; font-weight: 600; }
     </style>
 </head>
@@ -94,40 +93,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-//// botarlos si escriben la url
-    onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // CAPA DE SEGURIDAD: Verificar rol antes de mostrar nada
-        const docRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(docRef);
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        if (docSnap.exists()) {
-            const d = docSnap.data();
-            const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
-
-            if (!isAdmin) {
-                // Si NO es admin, lo sacamos volando de aquí
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Acceso Denegado',
-                    text: 'No tienes permisos para acceder a la Gestión Global.',
-                    timer: 3000,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "dashboard.html";
-                });
-                return; // Detenemos la ejecución del resto del script
-            }
-            
-            // Si es Admin, el código de la página sigue normal...
-            init(); 
-        }
-    } else {
-        window.location.href = "index.html";
-    }
-});
-    ////////////////// hasta aqaui
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
         authDomain: "khipusmart360.firebaseapp.com",
@@ -138,25 +106,64 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
     let dbUsuarios = {}; 
 
-    async function init() {
-        const snapUsers = await getDocs(collection(db, "usuarios"));
-        snapUsers.forEach(u => dbUsuarios[u.id] = u.data().nombre_completo);
+    // --- ESCUDO DE SEGURIDAD Y CARGA INICIAL ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const docRef = doc(db, "usuarios", user.uid);
+            const docSnap = await getDoc(docRef);
 
-        const snapAsig = await getDocs(collection(db, "asignaciones"));
-        const selectP = document.getElementById('select-periodo');
-        let periodos = new Set();
-        snapAsig.forEach(d => periodos.add(d.data().periodo));
-        
-        selectP.innerHTML = '<option value="">Periodo...</option>';
-        Array.from(periodos).sort().reverse().forEach(p => {
-            selectP.innerHTML += `<option value="${p}">${p}</option>`;
-        });
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                const isAdmin = (userData.rol === 'admin' || userData.rol === 'superadmin');
+
+                if (!isAdmin) {
+                    // Si el Prof. Carlos intenta entrar, lo sacamos
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acceso Denegado',
+                        text: 'No tienes permisos de administrador.',
+                        showConfirmButton: false,
+                        timer: 2500
+                    }).then(() => {
+                        window.location.href = "dashboard.html";
+                    });
+                } else {
+                    // Si es Admin, cargamos los datos de la página
+                    init();
+                }
+            }
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    async function init() {
+        try {
+            // Cargar usuarios para el mapa de nombres
+            const snapUsers = await getDocs(collection(db, "usuarios"));
+            snapUsers.forEach(u => dbUsuarios[u.id] = u.data().nombre_completo);
+
+            // Cargar Periodos
+            const snapAsig = await getDocs(collection(db, "asignaciones"));
+            const selectP = document.getElementById('select-periodo');
+            let periodos = new Set();
+            snapAsig.forEach(d => periodos.add(d.data().periodo));
+            
+            selectP.innerHTML = '<option value="">Periodo...</option>';
+            Array.from(periodos).sort().reverse().forEach(p => {
+                selectP.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        } catch (error) {
+            console.error("Error al inicializar filtros:", error);
+        }
     }
 
+    // --- FILTROS DINÁMICOS ---
     document.getElementById('select-periodo').addEventListener('change', async (e) => {
         const p = e.target.value;
         const snap = await getDocs(query(collection(db, "asignaciones"), where("periodo", "==", p)));
@@ -187,16 +194,18 @@
         return edad + " años";
     }
 
+    // --- BÚSQUEDA ---
     document.getElementById('btn-buscar').addEventListener('click', async () => {
         const periodo = document.getElementById('select-periodo').value;
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
         const tbody = document.getElementById('tabla-body');
 
-        if(!paralelo) return Swal.fire('Faltan Filtros', 'Seleccione Periodo, Grado y Paralelo', 'info');
+        if(!paralelo) return Swal.fire('Incompleto', 'Seleccione todos los filtros', 'info');
 
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-20 text-indigo-600 font-black animate-pulse">GENERANDO MATRIZ...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-20 text-indigo-600 font-black animate-pulse uppercase">Procesando Matriz...</td></tr>';
 
+        // 1. Docentes
         const qDoc = query(collection(db, "asignaciones"), where("periodo", "==", periodo), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
         const snapDoc = await getDocs(qDoc);
         const contDoc = document.getElementById('container-docentes');
@@ -208,15 +217,17 @@
             snapDoc.forEach(d => {
                 const nombre = dbUsuarios[d.data().id_docente] || "Desconocido";
                 const materia = d.data().id_materia || "Docencia";
-                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-black uppercase"><i class="fa-solid fa-user-tie mr-1"></i> ${nombre} | <span class="opacity-60">${materia}</span></span>`;
+                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-black uppercase"><i class="fa-solid fa-user-tie mr-1"></i> ${nombre} | ${materia}</span>`;
             });
         }
 
+        // 2. Estudiantes
         const qEst = query(collection(db, "estudiantes"), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
         const snapEst = await getDocs(qEst);
         let estudiantes = [];
         snapEst.forEach(d => estudiantes.push({ id: d.id, ...d.data() }));
 
+        // ORDENAMIENTO MANUAL EN JS (Para evitar error de índice)
         estudiantes.sort((a,b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
 
         tbody.innerHTML = "";
@@ -228,12 +239,12 @@
                 <td class="px-2 py-4 text-center font-mono">${e.cedula || '---'}</td>
                 <td class="px-2 py-4 text-center">${calcularEdad(e.fecha_nacimiento)}</td>
                 <td class="px-2 py-4">${e.nombre_repre || '---'}</td>
-                <td class="px-2 py-4 text-center text-green-700">
+                <td class="px-2 py-4 text-center text-green-700 font-bold">
                     ${e.telefono_repre ? `<i class="fa-brands fa-whatsapp mr-1"></i>${e.telefono_repre}` : '---'}
                 </td>
                 <td class="px-2 py-4 italic text-[10px]">${e.direccion || '---'}</td>
                 <td class="px-2 py-4 text-center">
-                    <span class="px-2 py-1 rounded-md ${e.nee === 'SI' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-400 opacity-30'}">${e.nee || 'NO'}</span>
+                    <span class="px-2 py-1 rounded-md ${e.nee === 'SI' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-400 opacity-40'}">${e.nee || 'NO'}</span>
                 </td>
                 <td class="px-2 py-4 text-center">
                     <div class="flex justify-center gap-3">
@@ -250,21 +261,19 @@
     window.eliminarEst = (id, nombre) => {
         Swal.fire({
             title: `¿Eliminar a ${nombre}?`,
-            text: "Esta acción removerá al estudiante de la base de datos.",
+            text: "Se borrará permanentemente de la base de datos.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Eliminar Registro'
+            confirmButtonText: 'Sí, borrar registro'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 await deleteDoc(doc(db, "estudiantes", id));
-                Swal.fire('Eliminado', 'Registro removido con éxito.', 'success');
+                Swal.fire('Eliminado', 'Estudiante removido.', 'success');
                 document.getElementById('btn-buscar').click();
             }
         });
     }
-
-    init();
 </script>
 </body>
 </html>
