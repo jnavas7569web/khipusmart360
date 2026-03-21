@@ -306,11 +306,10 @@
         }, 16);
     }
 
-    // --- LÓGICA UNIFICADA DE AUTENTICACIÓN Y RENDERIZADO ---
+  // --- LÓGICA UNIFICADA DE AUTENTICACIÓN Y RENDERIZADO ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             try {
-                // REFERENCIAS A ELEMENTOS DEL DOM (Asegúrate de que los IDs coincidan)
                 const docRef = doc(db, "usuarios", user.uid);
                 const docSnap = await getDoc(docRef);
 
@@ -318,45 +317,34 @@
                 const cursoDocEl = document.getElementById('curso-docente');
                 const pAdminEl = document.getElementById('panel-admin');
                 const cajaTopEl = document.getElementById('caja-top-estudiantes');
-                const avIniEl = document.getElementById('avatar-iniciales'); // Tu círculo 'ESC'
+                const avIniEl = document.getElementById('avatar-iniciales');
                 
-                // SELECTOR DEL ENLACE DEL SIDEBAR (Basado en tu imagen image_6.png)
-                const linkRegistroSidebar = document.querySelector('nav#sidebar a[href="estudiantes.html"]');
+                // SELECTOR ULTRA-PRECISO: Busca el enlace por su destino (href)
+                const linkGestionSidebar = document.querySelector('#sidebar a[href="lista_estudiantes.html"]');
 
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
-                    
-                    // DETERMINAR EL ROL
                     const isAdmin = (userData.rol === 'admin' || userData.rol === 'superadmin');
                     
-                    // --- 1. RENDERIZADO DE DATOS PERSONALES (Caja 1 y Avatar) ---
                     if (nombreDocEl) {
                         const prefijo = isAdmin ? "Admin: " : "Prof. ";
                         nombreDocEl.innerText = prefijo + userData.nombre_completo;
                     }
                     
                     if (avIniEl) {
-                        // Obtenemos las iniciales del nombre (ej: Jury Navas -> JN)
-                        const iniciales = userData.nombre_completo
-                            .split(' ')
-                            .map(name => name[0])
-                            .join('')
-                            .toUpperCase()
-                            .substring(0, 2); // Tomamos máximo 2
+                        const iniciales = userData.nombre_completo.split(' ').map(name => name[0]).join('').toUpperCase().substring(0, 2);
                         avIniEl.innerText = iniciales;
                     }
 
-                    // --- 2. CONTROL DE VISIBILIDAD DE ELEMENTOS (Admin vs Docente) ---
                     if (isAdmin) {
                         // --- FLUJO ADMINISTRADOR ---
                         if (cursoDocEl) cursoDocEl.innerText = "Gestión Global del Sistema";
-                        if (pAdminEl) pAdminEl.style.display = 'block'; // Mostramos barra verde
-                        if (cajaTopEl) cajaTopEl.style.display = 'none'; // Ocultamos Caja 3 (Top)
+                        if (pAdminEl) pAdminEl.style.display = 'block';
+                        if (cajaTopEl) cajaTopEl.style.display = 'none';
 
-                        // VISIBILIDAD SIDEBAR: MOSTRAR el enlace de registro
-                        if (linkRegistroSidebar) linkRegistroSidebar.style.display = 'flex';
+                        // MOSTRAR en el Sidebar
+                        if (linkGestionSidebar) linkGestionSidebar.style.setProperty('display', 'flex', 'important');
 
-                        // CONTEO CAJA 2: Admin cuenta TODOS los estudiantes del sistema
                         const qAllEstudiantes = query(collection(db, "estudiantes"));
                         const snapAllEstudiantes = await getCountFromServer(qAllEstudiantes);
                         animarConteo('total-estudiantes', snapAllEstudiantes.data().count);
@@ -364,31 +352,25 @@
                     } else {
                         // --- FLUJO DOCENTE AUTORIZADO ---
                         if (cursoDocEl) cursoDocEl.innerText = "Docente Autorizado - KhipuSmart360";
-                        if (pAdminEl) pAdminEl.style.display = 'none'; // Ocultamos barra verde
-                        if (cajaTopEl) cajaTopEl.style.display = 'block'; // Mostramos Caja 3 (Top)
+                        if (pAdminEl) pAdminEl.style.display = 'none';
+                        if (cajaTopEl) cajaTopEl.style.display = 'block';
 
-                        // VISIBILIDAD SIDEBAR: OCULTAR el enlace de registro
-                        if (linkRegistroSidebar) linkRegistroSidebar.style.display = 'none';
+                        // OCULTAR en el Sidebar para el docente
+                        if (linkGestionSidebar) {
+                            linkGestionSidebar.style.setProperty('display', 'none', 'important');
+                        }
 
-                        // CONTEO CAJA 2: Lógica de Asignaciones (NUEVA Y CORREGIDA)
-                        // Buscamos los cursos asignados al docente
                         const qAsignaciones = query(collection(db, "asignaciones"), where("id_docente", "==", user.uid));
                         const snapAsignaciones = await getDocs(qAsignaciones);
                         
                         let totalEstudiantesAcumulado = 0;
-
                         if (!snapAsignaciones.empty) {
-                            // Usamos un Set para evitar contar duplicados si da varias materias en un mismo curso
                             let cursosProcesadosUnicos = new Set();
-
                             for (const docAsig of snapAsignaciones.docs) {
                                 const datosAsig = docAsig.data();
                                 const cursoKeyUnica = `${datosAsig.id_grado}-${datosAsig.id_paralelo}`;
-                                
                                 if (!cursosProcesadosUnicos.has(cursoKeyUnica)) {
                                     cursosProcesadosUnicos.add(cursoKeyUnica);
-                                    
-                                    // Contamos los estudiantes de este curso específico
                                     const qEstudiantesPorCurso = query(collection(db, "estudiantes"), 
                                                        where("id_grado", "==", datosAsig.id_grado),
                                                        where("id_paralelo", "==", datosAsig.id_paralelo));
@@ -397,62 +379,16 @@
                                 }
                             }
                         }
-                        // Animamos el total acumulado
                         animarConteo('total-estudiantes', totalEstudiantesAcumulado);
                     }
-                } else {
-                    console.error("El documento de usuario no existe en Firestore.");
-                    if (nombreDocEl) nombreDocEl.innerText = "Error: Usuario no encontrado";
                 }
             } catch (error) {
-                console.error("Error crítico en el Dashboard:", error);
-                // Opcional: Mostrar mensaje de error amigable en la Caja 1
-                const nombreDocEl = document.getElementById('nombre-docente');
-                if (nombreDocEl) nombreDocEl.innerText = "Error de conexión";
+                console.error("Error crítico:", error);
             }
         } else {
-            // Usuario no logueado, redirigir al Login
             window.location.href = "index.html";
         }
     });
-
-    // --- LÓGICA DEL MENÚ LATERAL (SIDEBAR) MOBILE (Mantenemos la existente) ---
-    const hamburger = document.getElementById('hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const closeMenu = document.getElementById('closeMenu');
-
-    if (hamburger && sidebar && closeMenu) {
-        // Abrir menú
-        hamburger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebar.classList.add('active');
-        });
-
-        // Cerrar menú con la "X"
-        closeMenu.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-        });
-
-        // Cerrar al tocar fuera del menú
-        document.addEventListener('click', (event) => {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnHamburger = hamburger.contains(event.target);
-            if (sidebar.classList.contains('active') && !isClickInsideSidebar && !isClickOnHamburger) {
-                sidebar.classList.remove('active');
-            }
-        });
-    }
-
-    // --- LÓGICA DE CIERRE DE SESIÓN ---
-    const btnSalirSidebar = document.getElementById('btn-salir-sidebar');
-    if (btnSalirSidebar) {
-        btnSalirSidebar.addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            }).catch((error) => {
-                console.error("Error al cerrar sesión:", error);
-            });
-        });
     }
 </script>
 </body>
