@@ -11,6 +11,9 @@
         :root { --azul: #5c6bc0; --naranja: #ffb74d; --gris-fondo: #f4f7f6; }
         body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
         .card-header { background: linear-gradient(135deg, var(--azul) 0%, #3f51b5 100%); }
+        /* Texto negro fuerte para los datos */
+        .dato-estudiante { color: #000000 !important; font-weight: 600; }
+        .nombre-resaltado { color: #1a237e; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -19,7 +22,7 @@
     <div class="card-header p-6 text-white flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-black tracking-tight"><i class="fa-solid fa-clipboard-list mr-2"></i>Mi Nómina</h1>
-            <p class="text-indigo-100 text-sm opacity-80" id="info-docente">Cargando datos del docente...</p>
+            <p class="text-indigo-100 text-sm opacity-80" id="info-docente">Cargando cursos asignados...</p>
         </div>
         <div class="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/30 text-center">
             <span class="text-xs uppercase font-bold block opacity-70">Periodo Lectivo</span>
@@ -31,13 +34,13 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
                 <label class="block text-xs font-black text-gray-500 mb-2 uppercase tracking-widest">Seleccione Grado:</label>
-                <select id="select-grado" class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-indigo-400 outline-none transition-all">
-                    <option value="">Cargando mis grados...</option>
+                <select id="select-grado" class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-indigo-400 outline-none transition-all bg-white">
+                    <option value="">Cargando grados...</option>
                 </select>
             </div>
             <div>
                 <label class="block text-xs font-black text-gray-500 mb-2 uppercase tracking-widest">Paralelo:</label>
-                <select id="select-paralelo" class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-indigo-400 outline-none transition-all">
+                <select id="select-paralelo" class="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-indigo-400 outline-none transition-all bg-white">
                     <option value="">Seleccione...</option>
                 </select>
             </div>
@@ -48,18 +51,18 @@
     </div>
 
     <div class="p-6">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-indigo-900 border-b-2 border-indigo-50">
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider">Apellidos y Nombres</th>
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">Cédula</th>
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">Edad</th>
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider">Dirección</th>
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">NEE</th>
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-gray-100">
+                    <tr class="text-indigo-900 border-b border-gray-200">
+                        <th class="px-4 py-4 uppercase font-black tracking-wider">Apellidos y Nombres</th>
+                        <th class="px-4 py-4 uppercase font-black tracking-wider text-center">Cédula</th>
+                        <th class="px-4 py-4 uppercase font-black tracking-wider text-center">Edad</th>
+                        <th class="px-4 py-4 uppercase font-black tracking-wider">Dirección</th>
+                        <th class="px-4 py-4 uppercase font-black tracking-wider text-center">NEE</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-estudiantes" class="divide-y divide-gray-50">
+                <tbody id="tabla-estudiantes" class="divide-y divide-gray-100">
                     <tr>
                         <td colspan="5" class="text-center py-12 text-gray-400 italic">
                             Seleccione un grado y paralelo para visualizar la nómina.
@@ -73,7 +76,7 @@
             <a href="dashboard.html" class="text-gray-500 hover:text-indigo-600 font-bold transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i> Volver al Dashboard
             </a>
-            <div class="text-xs text-gray-400" id="contador-footer">Mostrando: 0 estudiantes</div>
+            <div class="text-xs text-gray-400 font-bold uppercase tracking-widest" id="contador-footer">Mostrando: 0 estudiantes</div>
         </div>
     </div>
 </div>
@@ -98,17 +101,19 @@
 
     let asignacionesDocente = [];
 
-    // Función para calcular edad
-    function calcularEdad(fecha) {
-        if(!fecha) return "---";
-        const hoy = new Date();
-        const cumple = new Date(fecha);
-        let edad = hoy.getFullYear() - cumple.getFullYear();
-        const m = hoy.getMonth() - cumple.getMonth();
-        if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
-            edad--;
-        }
-        return edad + " Años";
+    // FUNCIÓN EDAD CORREGIDA (Para objetos Timestamp de Firebase)
+    function calcularEdad(f) {
+        if(!f) return "---";
+        try {
+            const cumple = f.toDate ? f.toDate() : new Date(f);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - cumple.getFullYear();
+            const m = hoy.getMonth() - cumple.getMonth();
+            if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+                edad--;
+            }
+            return edad + " Años";
+        } catch (e) { return "---"; }
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -140,7 +145,6 @@
                     selectGrado.innerHTML += `<option value="${data.id_grado}">${data.id_grado}</option>`;
                 }
             });
-
             document.getElementById('info-docente').innerText = "Cursos vinculados para este periodo lectivo.";
         } else {
             window.location.href = "index.html";
@@ -151,7 +155,6 @@
         const gradoSel = e.target.value;
         const selectParalelo = document.getElementById('select-paralelo');
         selectParalelo.innerHTML = '<option value="">Paralelo...</option>';
-        
         const paralelosFiltrados = asignacionesDocente.filter(a => a.id_grado === gradoSel);
         paralelosFiltrados.forEach(p => {
             selectParalelo.innerHTML += `<option value="${p.id_paralelo}">${p.id_paralelo}</option>`;
@@ -178,12 +181,12 @@
             );
 
             const snapEst = await getDocs(qEst);
-            
             let listaEstudiantes = [];
             snapEst.forEach(doc => {
                 listaEstudiantes.push({ id: doc.id, ...doc.data() });
             });
 
+            // Ordenamiento manual para evitar error de índice
             listaEstudiantes.sort((a, b) => {
                 const nombreA = (a.apellidos || "").toLowerCase();
                 const nombreB = (b.apellidos || "").toLowerCase();
@@ -198,23 +201,27 @@
             } else {
                 listaEstudiantes.forEach(e => {
                     contador++;
+                    // AJUSTE DE CAMPOS SEGÚN BASE DE DATOS
+                    const nomCompleto = `${e.apellidos || ''} ${e.Nombres || ''}`;
+                    const neeVale = (e.estudiante_NEE || 'no').toUpperCase();
+
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-indigo-50/50 transition-colors";
+                    tr.className = "hover:bg-indigo-50/50 transition-colors border-b border-gray-100 dato-estudiante";
                     tr.innerHTML = `
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
                                     ${e.apellidos ? e.apellidos.charAt(0) : '?'}
                                 </div>
-                                <span class="font-medium text-gray-800 uppercase text-xs">${e.apellidos} ${e.nombres}</span>
+                                <span class="nombre-resaltado">${nomCompleto}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-center font-mono text-gray-500 text-xs">${e.cedula || '---'}</td>
-                        <td class="px-4 py-4 text-center text-gray-600 text-xs">${calcularEdad(e.fecha_nacimiento)}</td>
-                        <td class="px-4 py-4 text-gray-600 text-xs italic">${e.direccion || 'No registrada'}</td>
+                        <td class="px-4 py-4 text-center font-mono text-black">${e.cedula || '---'}</td>
+                        <td class="px-4 py-4 text-center text-black">${calcularEdad(e.fecha_nacimiento)}</td>
+                        <td class="px-4 py-4 text-black italic" style="font-size: 10px;">${e.direccion || 'No registrada'}</td>
                         <td class="px-4 py-4 text-center">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-black ${e.nee === 'SI' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'}">
-                                ${e.nee === 'SI' ? 'NEE' : 'NO'}
+                            <span class="px-2 py-1 rounded-md font-black ${neeVale === 'SI' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'}">
+                                ${neeVale}
                             </span>
                         </td>
                     `;
