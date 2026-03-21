@@ -95,7 +95,39 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs, query, where, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+//// botarlos si escriben la url
+    onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // CAPA DE SEGURIDAD: Verificar rol antes de mostrar nada
+        const docRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(docRef);
 
+        if (docSnap.exists()) {
+            const d = docSnap.data();
+            const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
+
+            if (!isAdmin) {
+                // Si NO es admin, lo sacamos volando de aquí
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Denegado',
+                    text: 'No tienes permisos para acceder a la Gestión Global.',
+                    timer: 3000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "dashboard.html";
+                });
+                return; // Detenemos la ejecución del resto del script
+            }
+            
+            // Si es Admin, el código de la página sigue normal...
+            init(); 
+        }
+    } else {
+        window.location.href = "index.html";
+    }
+});
+    ////////////////// hasta aqaui
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
         authDomain: "khipusmart360.firebaseapp.com",
