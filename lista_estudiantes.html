@@ -12,7 +12,13 @@
         body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
         .header-admin { background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); }
         .badge-docente { background: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9; }
-        .texto-matriz { color: #1a1a1a !important; font-weight: 600; }
+        
+        /* Encabezados de matriz con fondo suave */
+        .thead-suave { background-color: #f1f3f9; }
+        
+        /* Texto negro fuerte para toda la matriz */
+        .texto-matriz { color: #000000 !important; font-weight: 600; }
+        .uppercase-bold { text-transform: uppercase; font-weight: 800; color: #1a237e; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -60,18 +66,18 @@
     </div>
 
     <div class="p-6">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-xl border border-gray-100">
             <table class="w-full text-left text-xs">
-                <thead>
-                    <tr class="text-indigo-900 border-b-2 border-indigo-50">
-                        <th class="px-2 py-4 uppercase font-black tracking-tight">Apellidos y Nombres</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Cédula</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Edad</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight">Representante</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Teléfono</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight">Dirección</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">NEE</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Acciones</th>
+                <thead class="thead-suave">
+                    <tr class="text-indigo-900 border-b border-gray-200">
+                        <th class="px-3 py-4 uppercase font-black tracking-tight">Apellidos y Nombres</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight text-center">Cédula</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight text-center">Edad</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight">Representante</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight text-center">Teléfono</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight">Dirección</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight text-center">NEE</th>
+                        <th class="px-3 py-4 uppercase font-black tracking-tight text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-body" class="divide-y divide-gray-100">
@@ -111,59 +117,37 @@
 
     let dbUsuarios = {}; 
 
-    // --- ESCUDO DE SEGURIDAD Y CARGA INICIAL ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             const docRef = doc(db, "usuarios", user.uid);
             const docSnap = await getDoc(docRef);
-
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                const isAdmin = (userData.rol === 'admin' || userData.rol === 'superadmin');
-
-                if (!isAdmin) {
-                    // Si el Prof. Carlos intenta entrar, lo sacamos
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Acceso Denegado',
-                        text: 'No tienes permisos de administrador.',
-                        showConfirmButton: false,
-                        timer: 2500
-                    }).then(() => {
-                        window.location.href = "dashboard.html";
-                    });
-                } else {
-                    // Si es Admin, cargamos los datos de la página
+                if (userData.rol === 'admin' || userData.rol === 'superadmin') {
                     init();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Acceso Denegado', showConfirmButton: false, timer: 1500 })
+                    .then(() => window.location.href = "dashboard.html");
                 }
             }
-        } else {
-            window.location.href = "index.html";
-        }
+        } else { window.location.href = "index.html"; }
     });
 
     async function init() {
-        try {
-            // Cargar usuarios para el mapa de nombres
-            const snapUsers = await getDocs(collection(db, "usuarios"));
-            snapUsers.forEach(u => dbUsuarios[u.id] = u.data().nombre_completo);
+        const snapUsers = await getDocs(collection(db, "usuarios"));
+        snapUsers.forEach(u => dbUsuarios[u.id] = u.data().nombre_completo);
 
-            // Cargar Periodos
-            const snapAsig = await getDocs(collection(db, "asignaciones"));
-            const selectP = document.getElementById('select-periodo');
-            let periodos = new Set();
-            snapAsig.forEach(d => periodos.add(d.data().periodo));
-            
-            selectP.innerHTML = '<option value="">Periodo...</option>';
-            Array.from(periodos).sort().reverse().forEach(p => {
-                selectP.innerHTML += `<option value="${p}">${p}</option>`;
-            });
-        } catch (error) {
-            console.error("Error al inicializar filtros:", error);
-        }
+        const snapAsig = await getDocs(collection(db, "asignaciones"));
+        const selectP = document.getElementById('select-periodo');
+        let periodos = new Set();
+        snapAsig.forEach(d => periodos.add(d.data().periodo));
+        selectP.innerHTML = '<option value="">Periodo...</option>';
+        Array.from(periodos).sort().reverse().forEach(p => {
+            selectP.innerHTML += `<option value="${p}">${p}</option>`;
+        });
     }
 
-    // --- FILTROS DINÁMICOS ---
+    // Filtros dinámicos
     document.getElementById('select-periodo').addEventListener('change', async (e) => {
         const p = e.target.value;
         const snap = await getDocs(query(collection(db, "asignaciones"), where("periodo", "==", p)));
@@ -185,25 +169,28 @@
         paras.forEach(pa => sP.innerHTML += `<option value="${pa}">${pa}</option>`);
     });
 
+    // CORRECCIÓN EDAD (Firebase Timestamp)
     function calcularEdad(f) {
         if(!f) return "---";
-        const hoy = new Date();
-        const cumple = new Date(f);
-        let edad = hoy.getFullYear() - cumple.getFullYear();
-        if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() === cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
-        return edad + " años";
+        try {
+            // Si viene de Firebase es un objeto con .seconds, lo convertimos a Date
+            const cumple = f.toDate ? f.toDate() : new Date(f);
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - cumple.getFullYear();
+            if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() === cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
+            return edad + " años";
+        } catch (e) { return "---"; }
     }
 
-    // --- BÚSQUEDA ---
     document.getElementById('btn-buscar').addEventListener('click', async () => {
         const periodo = document.getElementById('select-periodo').value;
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
         const tbody = document.getElementById('tabla-body');
 
-        if(!paralelo) return Swal.fire('Incompleto', 'Seleccione todos los filtros', 'info');
+        if(!paralelo) return Swal.fire('Atención', 'Seleccione todos los filtros', 'info');
 
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-20 text-indigo-600 font-black animate-pulse uppercase">Procesando Matriz...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-20 text-indigo-600 font-black animate-pulse">CARGANDO MATRIZ...</td></tr>';
 
         // 1. Docentes
         const qDoc = query(collection(db, "asignaciones"), where("periodo", "==", periodo), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
@@ -216,8 +203,7 @@
             contDoc.classList.remove('hidden');
             snapDoc.forEach(d => {
                 const nombre = dbUsuarios[d.data().id_docente] || "Desconocido";
-                const materia = d.data().id_materia || "Docencia";
-                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-black uppercase"><i class="fa-solid fa-user-tie mr-1"></i> ${nombre} | ${materia}</span>`;
+                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-black uppercase"><i class="fa-solid fa-user-tie mr-1"></i> ${nombre}</span>`;
             });
         }
 
@@ -227,26 +213,33 @@
         let estudiantes = [];
         snapEst.forEach(d => estudiantes.push({ id: d.id, ...d.data() }));
 
-        // ORDENAMIENTO MANUAL EN JS (Para evitar error de índice)
         estudiantes.sort((a,b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
 
         tbody.innerHTML = "";
         estudiantes.forEach(e => {
+            // CORRECCIÓN CAMPOS: Según tu imagen 10
+            const nomCompleto = `${e.apellidos || ''} ${e.Nombres || ''}`;
+            const nomRepre = e.representante || '---';
+            const telRepre = e.telefono_representante || '---';
+            const neeVale = (e.estudiante_NEE || 'no').toUpperCase(); // Normalizar a mayúsculas
+
             const tr = document.createElement('tr');
             tr.className = "hover:bg-indigo-50 transition-all border-b border-gray-100 texto-matriz";
             tr.innerHTML = `
-                <td class="px-2 py-4 font-black text-indigo-900 uppercase tracking-tight">${e.apellidos} ${e.nombres}</td>
-                <td class="px-2 py-4 text-center font-mono">${e.cedula || '---'}</td>
-                <td class="px-2 py-4 text-center">${calcularEdad(e.fecha_nacimiento)}</td>
-                <td class="px-2 py-4">${e.nombre_repre || '---'}</td>
-                <td class="px-2 py-4 text-center text-green-700 font-bold">
-                    ${e.telefono_repre ? `<i class="fa-brands fa-whatsapp mr-1"></i>${e.telefono_repre}` : '---'}
+                <td class="px-3 py-4 uppercase-bold">${nomCompleto}</td>
+                <td class="px-3 py-4 text-center font-mono text-black">${e.cedula || '---'}</td>
+                <td class="px-3 py-4 text-center text-black">${calcularEdad(e.fecha_nacimiento)}</td>
+                <td class="px-3 py-4 text-black">${nomRepre}</td>
+                <td class="px-3 py-4 text-center text-green-700 font-bold">
+                    ${telRepre !== '---' ? `<i class="fa-brands fa-whatsapp mr-1"></i>${telRepre}` : '---'}
                 </td>
-                <td class="px-2 py-4 italic text-[10px]">${e.direccion || '---'}</td>
-                <td class="px-2 py-4 text-center">
-                    <span class="px-2 py-1 rounded-md ${e.nee === 'SI' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-400 opacity-40'}">${e.nee || 'NO'}</span>
+                <td class="px-3 py-4 italic text-black" style="font-size: 10px;">${e.direccion || '---'}</td>
+                <td class="px-3 py-4 text-center">
+                    <span class="px-2 py-1 rounded-md font-black ${neeVale === 'SI' ? 'bg-red-600 text-white shadow-sm' : 'bg-gray-200 text-gray-600'}">
+                        ${neeVale}
+                    </span>
                 </td>
-                <td class="px-2 py-4 text-center">
+                <td class="px-3 py-4 text-center">
                     <div class="flex justify-center gap-3">
                         <button onclick="window.location.href='estudiantes.html?id=${e.id}'" class="text-indigo-600 hover:scale-125 transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button onclick="eliminarEst('${e.id}', '${e.apellidos}')" class="text-red-500 hover:scale-125 transition-all"><i class="fa-solid fa-trash-can"></i></button>
