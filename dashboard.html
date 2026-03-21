@@ -263,105 +263,197 @@
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
-            authDomain: "khipusmart360.firebaseapp.com",
-            projectId: "khipusmart360",
-            storageBucket: "khipusmart360.firebasestorage.app",
-            messagingSenderId: "240593523716",
-            appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
-        };
+    // --- CONFIGURACIÓN DE FIREBASE (Mantenemos la tuya) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        // --- FUNCIÓN ANIMACIÓN DE CONTEO ---
-        function animarConteo(elementoId, valorFinal) {
-            const el = document.getElementById(elementoId);
-            let valorInicial = 0;
-            const duracion = 1200; 
-            const incremento = valorFinal / (duracion / 16);
-            if(valorFinal === 0) { el.innerText = "0"; return; }
-            const timer = setInterval(() => {
-                valorInicial += incremento;
-                if (valorInicial >= valorFinal) {
-                    el.innerText = valorFinal;
-                    clearInterval(timer);
-                } else {
-                    el.innerText = Math.floor(valorInicial);
-                }
-            }, 16);
+    // --- FUNCIÓN DE ANIMACIÓN DE CONTEO (Mantenemos la optimizada) ---
+    function animarConteo(elementoId, valorFinal) {
+        const el = document.getElementById(elementoId);
+        if (!el) return; // Seguridad
+        let valorInicial = 0;
+        const duracion = 1200; // 1.2 segundos
+        const incremento = valorFinal / (duracion / 16);
+
+        if (valorFinal === 0) {
+            el.innerText = "0";
+            return;
         }
 
-        onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        try {
-            const docRef = doc(db, "usuarios", user.uid);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const d = docSnap.data();
-                
-                // 1. Aquí definimos el rol (esto ya lo tienes)
-                const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
-                
-                // 2. BUSCAMOS EL ENLACE EN EL SIDEBAR (Lo nuevo)
-                const linkRegistro = document.querySelector('a[href="estudiantes.html"]');
-
-                const pAdmin = document.getElementById('panel-admin');
-                const cursoDoc = document.getElementById('curso-docente');
-                const cajaTop = document.getElementById('caja-top-estudiantes');
-
-                if (isAdmin) {
-                    // --- LÓGICA PARA ADMIN ---
-                    pAdmin.style.display = 'block'; 
-                    cursoDoc.innerText = "Gestión Global del Sistema";
-                    if(cajaTop) cajaTop.style.display = 'none';
-
-                    // MOSTRAMOS el link de registro de estudiantes en el menú
-                    if(linkRegistro) linkRegistro.style.display = 'flex';
-
-                    // (Aquí sigue tu código de conteo para Admin...)
-                } else {
-                    // --- LÓGICA PARA DOCENTE ---
-                    pAdmin.style.display = 'none';
-                    cursoDoc.innerText = "Docente Autorizado";
-                    if(cajaTop) cajaTop.style.display = 'block';
-
-                    // OCULTAMOS el link de registro de estudiantes para el profe
-                    if(linkRegistro) linkRegistro.style.display = 'none';
-
-                    // (Aquí sigue tu código de conteo por asignaciones...)
-                }
+        const timer = setInterval(() => {
+            valorInicial += incremento;
+            if (valorInicial >= valorFinal) {
+                el.innerText = valorFinal;
+                clearInterval(timer);
+            } else {
+                el.innerText = Math.floor(valorInicial);
             }
-        } catch (e) { console.error("Error:", e); }
-    } else {
-        window.location.href = "index.html";
+        }, 16);
     }
-});
 
-        // Eventos de Menú Mobile
-        const hamburger = document.getElementById('hamburger');
-        const sidebar = document.getElementById('sidebar');
-        const closeMenu = document.getElementById('closeMenu');
+    // --- LÓGICA UNIFICADA DE AUTENTICACIÓN Y RENDERIZADO ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                // REFERENCIAS A ELEMENTOS DEL DOM (Asegúrate de que los IDs coincidan)
+                const docRef = doc(db, "usuarios", user.uid);
+                const docSnap = await getDoc(docRef);
 
-        hamburger.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('active'); });
-        closeMenu.addEventListener('click', () => { sidebar.classList.remove('active'); });
-        document.addEventListener('click', (e) => {
-            if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+                const nombreDocEl = document.getElementById('nombre-docente');
+                const cursoDocEl = document.getElementById('curso-docente');
+                const pAdminEl = document.getElementById('panel-admin');
+                const cajaTopEl = document.getElementById('caja-top-estudiantes');
+                const avIniEl = document.getElementById('avatar-iniciales'); // Tu círculo 'ESC'
+                
+                // SELECTOR DEL ENLACE DEL SIDEBAR (Basado en tu imagen image_6.png)
+                const linkRegistroSidebar = document.querySelector('nav#sidebar a[href="estudiantes.html"]');
+
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    
+                    // DETERMINAR EL ROL
+                    const isAdmin = (userData.rol === 'admin' || userData.rol === 'superadmin');
+                    
+                    // --- 1. RENDERIZADO DE DATOS PERSONALES (Caja 1 y Avatar) ---
+                    if (nombreDocEl) {
+                        const prefijo = isAdmin ? "Admin: " : "Prof. ";
+                        nombreDocEl.innerText = prefijo + userData.nombre_completo;
+                    }
+                    
+                    if (avIniEl) {
+                        // Obtenemos las iniciales del nombre (ej: Jury Navas -> JN)
+                        const iniciales = userData.nombre_completo
+                            .split(' ')
+                            .map(name => name[0])
+                            .join('')
+                            .toUpperCase()
+                            .substring(0, 2); // Tomamos máximo 2
+                        avIniEl.innerText = iniciales;
+                    }
+
+                    // --- 2. CONTROL DE VISIBILIDAD DE ELEMENTOS (Admin vs Docente) ---
+                    if (isAdmin) {
+                        // --- FLUJO ADMINISTRADOR ---
+                        if (cursoDocEl) cursoDocEl.innerText = "Gestión Global del Sistema";
+                        if (pAdminEl) pAdminEl.style.display = 'block'; // Mostramos barra verde
+                        if (cajaTopEl) cajaTopEl.style.display = 'none'; // Ocultamos Caja 3 (Top)
+
+                        // VISIBILIDAD SIDEBAR: MOSTRAR el enlace de registro
+                        if (linkRegistroSidebar) linkRegistroSidebar.style.display = 'flex';
+
+                        // CONTEO CAJA 2: Admin cuenta TODOS los estudiantes del sistema
+                        const qAllEstudiantes = query(collection(db, "estudiantes"));
+                        const snapAllEstudiantes = await getCountFromServer(qAllEstudiantes);
+                        animarConteo('total-estudiantes', snapAllEstudiantes.data().count);
+
+                    } else {
+                        // --- FLUJO DOCENTE AUTORIZADO ---
+                        if (cursoDocEl) cursoDocEl.innerText = "Docente Autorizado - KhipuSmart360";
+                        if (pAdminEl) pAdminEl.style.display = 'none'; // Ocultamos barra verde
+                        if (cajaTopEl) cajaTopEl.style.display = 'block'; // Mostramos Caja 3 (Top)
+
+                        // VISIBILIDAD SIDEBAR: OCULTAR el enlace de registro
+                        if (linkRegistroSidebar) linkRegistroSidebar.style.display = 'none';
+
+                        // CONTEO CAJA 2: Lógica de Asignaciones (NUEVA Y CORREGIDA)
+                        // Buscamos los cursos asignados al docente
+                        const qAsignaciones = query(collection(db, "asignaciones"), where("id_docente", "==", user.uid));
+                        const snapAsignaciones = await getDocs(qAsignaciones);
+                        
+                        let totalEstudiantesAcumulado = 0;
+
+                        if (!snapAsignaciones.empty) {
+                            // Usamos un Set para evitar contar duplicados si da varias materias en un mismo curso
+                            let cursosProcesadosUnicos = new Set();
+
+                            for (const docAsig of snapAsignaciones.docs) {
+                                const datosAsig = docAsig.data();
+                                const cursoKeyUnica = `${datosAsig.id_grado}-${datosAsig.id_paralelo}`;
+                                
+                                if (!cursosProcesadosUnicos.has(cursoKeyUnica)) {
+                                    cursosProcesadosUnicos.add(cursoKeyUnica);
+                                    
+                                    // Contamos los estudiantes de este curso específico
+                                    const qEstudiantesPorCurso = query(collection(db, "estudiantes"), 
+                                                       where("id_grado", "==", datosAsig.id_grado),
+                                                       where("id_paralelo", "==", datosAsig.id_paralelo));
+                                    const snapCountEstudiantes = await getCountFromServer(qEstudiantesPorCurso);
+                                    totalEstudiantesAcumulado += snapCountEstudiantes.data().count;
+                                }
+                            }
+                        }
+                        // Animamos el total acumulado
+                        animarConteo('total-estudiantes', totalEstudiantesAcumulado);
+                    }
+                } else {
+                    console.error("El documento de usuario no existe en Firestore.");
+                    if (nombreDocEl) nombreDocEl.innerText = "Error: Usuario no encontrado";
+                }
+            } catch (error) {
+                console.error("Error crítico en el Dashboard:", error);
+                // Opcional: Mostrar mensaje de error amigable en la Caja 1
+                const nombreDocEl = document.getElementById('nombre-docente');
+                if (nombreDocEl) nombreDocEl.innerText = "Error de conexión";
+            }
+        } else {
+            // Usuario no logueado, redirigir al Login
+            window.location.href = "index.html";
+        }
+    });
+
+    // --- LÓGICA DEL MENÚ LATERAL (SIDEBAR) MOBILE (Mantenemos la existente) ---
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const closeMenu = document.getElementById('closeMenu');
+
+    if (hamburger && sidebar && closeMenu) {
+        // Abrir menú
+        hamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.add('active');
+        });
+
+        // Cerrar menú con la "X"
+        closeMenu.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+
+        // Cerrar al tocar fuera del menú
+        document.addEventListener('click', (event) => {
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnHamburger = hamburger.contains(event.target);
+            if (sidebar.classList.contains('active') && !isClickInsideSidebar && !isClickOnHamburger) {
                 sidebar.classList.remove('active');
             }
         });
+    }
 
-        document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = "index.html");
+    // --- LÓGICA DE CIERRE DE SESIÓN ---
+    const btnSalirSidebar = document.getElementById('btn-salir-sidebar');
+    if (btnSalirSidebar) {
+        btnSalirSidebar.addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            }).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+            });
         });
-    </script>
+    }
+</script>
 </body>
 </html>
