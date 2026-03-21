@@ -68,18 +68,32 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6 p-5 bg-gray-50 rounded-xl border border-gray-100">
                 <div>
-                    <label for="id_grado" class="ks-label">Grado / Año</label>
-                    <select id="id_grado" class="ks-input bg-white" required>
-                        <option value="">Seleccione...</option>
-                        <option value="1">1ero EGB</option>
-                        <option value="2">2do EGB</option>
-                        <option value="3">3ero EGB</option>
-                        <option value="4">4to EGB</option>
-                        <option value="5">5to EGB</option>
-                        <option value="6">6to EGB</option>
-                        <option value="7">7mo EGB</option>
-                    </select>
-                </div>
+    <label for="id_grado" class="ks-label">Grado / Año</label>
+    <select id="id_grado" class="ks-input bg-white" required>
+        <option value="">Seleccione...</option>
+        <optgroup label="Educación Inicial">
+            <option value="Inicial 1">Inicial 1</option>
+            <option value="Inicial 2">Inicial 2</option>
+        </optgroup>
+        <optgroup label="Educación Básica">
+            <option value="1">1ero EGB</option>
+            <option value="2">2do EGB</option>
+            <option value="3">3ero EGB</option>
+            <option value="4">4to EGB</option>
+            <option value="5">5to EGB</option>
+            <option value="6">6to EGB</option>
+            <option value="7">7mo EGB</option>
+            <option value="8">8vo EGB</option>
+            <option value="9">9no EGB</option>
+            <option value="10">10mo EGB</option>
+        </optgroup>
+        <optgroup label="Bachillerato">
+            <option value="1 Bachillerato">1ero Bachillerato</option>
+            <option value="2 Bachillerato">2do Bachillerato</option>
+            <option value="3 Bachillerato">3ero Bachillerato</option>
+        </optgroup>
+    </select>
+</div>
                 <div>
                     <label for="id_paralelo" class="ks-label">Paralelo</label>
                     <select id="id_paralelo" class="ks-input bg-white" required>
