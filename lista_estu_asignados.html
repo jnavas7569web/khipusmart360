@@ -80,7 +80,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -99,11 +99,9 @@
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // 1. Obtener el periodo del Admin (en este caso lo seteamos fijo, pero podrías traerlo de una colección 'configuracion')
             const periodoActual = "2026-2027"; 
             document.getElementById('periodo-actual').innerText = periodoActual;
 
-            // 2. Cargar Asignaciones del Docente
             const qAsig = query(
                 collection(db, "asignaciones"), 
                 where("id_docente", "==", user.uid),
@@ -119,7 +117,6 @@
                 return;
             }
 
-            // Guardamos las asignaciones y llenamos el selector de Grados (únicos)
             let gradosUnicos = new Set();
             snapAsig.forEach(docAsig => {
                 const data = docAsig.data();
@@ -131,13 +128,11 @@
             });
 
             document.getElementById('info-docente').innerText = "Cursos vinculados para este periodo lectivo.";
-
         } else {
             window.location.href = "index.html";
         }
     });
 
-    // Filtro dinámico: Al elegir grado, mostrar solo los paralelos asignados
     document.getElementById('select-grado').addEventListener('change', (e) => {
         const gradoSel = e.target.value;
         const selectParalelo = document.getElementById('select-paralelo');
@@ -149,7 +144,6 @@
         });
     });
 
-    // Lógica para listar estudiantes
     document.getElementById('btn-cargar').addEventListener('click', async () => {
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
@@ -160,25 +154,39 @@
             return;
         }
 
-        tabla.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-indigo-500 font-bold">Buscando estudiantes...</td></tr>';
+        tabla.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-indigo-500 font-bold italic">Cargando nómina...</td></tr>';
 
         try {
+            // Consulta sin orderBy para evitar errores de índice
             const qEst = query(
                 collection(db, "estudiantes"),
                 where("id_grado", "==", grado),
-                where("id_paralelo", "==", paralelo),
-                orderBy("apellidos", "asc")
+                where("id_paralelo", "==", paralelo)
             );
 
             const snapEst = await getDocs(qEst);
+            
+            // 1. Convertimos a Array para ordenar manualmente
+            let listaEstudiantes = [];
+            snapEst.forEach(doc => {
+                listaEstudiantes.push({ id: doc.id, ...doc.data() });
+            });
+
+            // 2. Ordenamiento alfabético manual por Apellidos
+            listaEstudiantes.sort((a, b) => {
+                const nombreA = (a.apellidos || "").toLowerCase();
+                const nombreB = (b.apellidos || "").toLowerCase();
+                return nombreA.localeCompare(nombreB);
+            });
+
+            // 3. Renderizado de la tabla
             tabla.innerHTML = "";
             let contador = 0;
 
-            if(snapEst.empty) {
+            if(listaEstudiantes.length === 0) {
                 tabla.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gray-400 italic">No hay estudiantes registrados en este curso.</td></tr>';
             } else {
-                snapEst.forEach(docEst => {
-                    const e = docEst.data();
+                listaEstudiantes.forEach(e => {
                     contador++;
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-indigo-50/50 transition-colors";
@@ -186,7 +194,7 @@
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                                    ${e.apellidos.charAt(0)}
+                                    ${e.apellidos ? e.apellidos.charAt(0) : '?'}
                                 </div>
                                 <span class="font-medium text-gray-800">${e.apellidos} ${e.nombres}</span>
                             </div>
@@ -198,7 +206,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <button onclick="window.location.href='perfil_estudiante.html?id=${docEst.id}'" class="text-indigo-500 hover:text-indigo-700 p-2">
+                            <button onclick="window.location.href='perfil_estudiante.html?id=${e.id}'" class="text-indigo-500 hover:text-indigo-700 p-2">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                             <a href="https://wa.me/593${e.telefono_repre}" target="_blank" class="text-green-500 hover:text-green-700 p-2">
