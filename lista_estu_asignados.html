@@ -15,7 +15,7 @@
 </head>
 <body class="p-4 md:p-8">
 
-<div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
+<div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
     <div class="card-header p-6 text-white flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-black tracking-tight"><i class="fa-solid fa-clipboard-list mr-2"></i>Mi Nómina</h1>
@@ -54,13 +54,14 @@
                     <tr class="text-indigo-900 border-b-2 border-indigo-50">
                         <th class="px-4 py-3 text-xs font-black uppercase tracking-wider">Apellidos y Nombres</th>
                         <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">Cédula</th>
+                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">Edad</th>
+                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider">Dirección</th>
                         <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">NEE</th>
-                        <th class="px-4 py-3 text-xs font-black uppercase tracking-wider text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-estudiantes" class="divide-y divide-gray-50">
                     <tr>
-                        <td colspan="4" class="text-center py-12 text-gray-400 italic">
+                        <td colspan="5" class="text-center py-12 text-gray-400 italic">
                             Seleccione un grado y paralelo para visualizar la nómina.
                         </td>
                     </tr>
@@ -96,6 +97,19 @@
     const db = getFirestore(app);
 
     let asignacionesDocente = [];
+
+    // Función para calcular edad
+    function calcularEdad(fecha) {
+        if(!fecha) return "---";
+        const hoy = new Date();
+        const cumple = new Date(fecha);
+        let edad = hoy.getFullYear() - cumple.getFullYear();
+        const m = hoy.getMonth() - cumple.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+            edad--;
+        }
+        return edad + " Años";
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -154,10 +168,9 @@
             return;
         }
 
-        tabla.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-indigo-500 font-bold italic">Cargando nómina...</td></tr>';
+        tabla.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-indigo-500 font-bold italic">Cargando nómina...</td></tr>';
 
         try {
-            // Consulta sin orderBy para evitar errores de índice
             const qEst = query(
                 collection(db, "estudiantes"),
                 where("id_grado", "==", grado),
@@ -166,25 +179,22 @@
 
             const snapEst = await getDocs(qEst);
             
-            // 1. Convertimos a Array para ordenar manualmente
             let listaEstudiantes = [];
             snapEst.forEach(doc => {
                 listaEstudiantes.push({ id: doc.id, ...doc.data() });
             });
 
-            // 2. Ordenamiento alfabético manual por Apellidos
             listaEstudiantes.sort((a, b) => {
                 const nombreA = (a.apellidos || "").toLowerCase();
                 const nombreB = (b.apellidos || "").toLowerCase();
                 return nombreA.localeCompare(nombreB);
             });
 
-            // 3. Renderizado de la tabla
             tabla.innerHTML = "";
             let contador = 0;
 
             if(listaEstudiantes.length === 0) {
-                tabla.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gray-400 italic">No hay estudiantes registrados en este curso.</td></tr>';
+                tabla.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-400 italic">No hay estudiantes registrados en este curso.</td></tr>';
             } else {
                 listaEstudiantes.forEach(e => {
                     contador++;
@@ -196,22 +206,16 @@
                                 <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
                                     ${e.apellidos ? e.apellidos.charAt(0) : '?'}
                                 </div>
-                                <span class="font-medium text-gray-800">${e.apellidos} ${e.nombres}</span>
+                                <span class="font-medium text-gray-800 uppercase text-xs">${e.apellidos} ${e.nombres}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-center font-mono text-gray-500 text-sm">${e.cedula || '---'}</td>
+                        <td class="px-4 py-4 text-center font-mono text-gray-500 text-xs">${e.cedula || '---'}</td>
+                        <td class="px-4 py-4 text-center text-gray-600 text-xs">${calcularEdad(e.fecha_nacimiento)}</td>
+                        <td class="px-4 py-4 text-gray-600 text-xs italic">${e.direccion || 'No registrada'}</td>
                         <td class="px-4 py-4 text-center">
                             <span class="px-2 py-1 rounded-md text-[10px] font-black ${e.nee === 'SI' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'}">
                                 ${e.nee === 'SI' ? 'NEE' : 'NO'}
                             </span>
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            <button onclick="window.location.href='perfil_estudiante.html?id=${e.id}'" class="text-indigo-500 hover:text-indigo-700 p-2">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                            <a href="https://wa.me/593${e.telefono_repre}" target="_blank" class="text-green-500 hover:text-green-700 p-2">
-                                <i class="fa-brands fa-whatsapp"></i>
-                            </a>
                         </td>
                     `;
                     tabla.appendChild(tr);
