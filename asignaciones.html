@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Gestión de Asignaciones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --azul: #5c6bc0; --gris-fondo: #f4f7f6; }
+        body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
+        .swal2-popup { border-radius: 15px !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-lg border-l-4 border-indigo-500">
+        <div>
+            <h2 class="text-3xl font-extrabold text-indigo-900 tracking-tight">
+                <i class="fa-solid fa-code-branch mr-2"></i>Control de Asignaciones Académicas
+            </h2>
+            <p class="text-gray-600 mt-1">Vincule docentes, cursos y materias para el periodo actual.</p>
+        </div>
+        <a href="dashboard.html" class="bg-gray-100 text-gray-700 px-5 py-3 rounded-xl font-bold hover:bg-gray-200 transition all text-sm shadow-sm">
+            <i class="fa-solid fa-arrow-left mr-2"></i>Volver al Dashboard
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white p-7 rounded-2xl shadow-xl border border-gray-100 h-fit sticky top-8">
+            <h3 id="form-title" class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fa-solid fa-circle-plus text-indigo-500 mr-3"></i>Nueva Vinculación
+            </h3>
+            
+            <form id="form-asignacion" class="space-y-4">
+                <input type="hidden" id="asig-id"> <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Docente:</label>
+                    <select id="select-docente" required class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400">
+                        <option value="">Cargando docentes...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Grado/Año:</label>
+                        <select id="select-grado" required class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400">
+                            <option value="">Cargando...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Paralelo:</label>
+                        <select id="select-paralelo" required class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400">
+                            <option value="">Cargando...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Materia:</label>
+                    <select id="select-materia" required class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400">
+                        <option value="">Cargando materias...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Periodo Lectivo:</label>
+                    <input type="text" id="periodo" value="2026-2027" required class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 font-mono text-center">
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" id="btn-submit" class="flex-grow bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition all shadow-md uppercase text-sm tracking-wide">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar Asignación
+                    </button>
+                    <button type="button" id="btn-cancelar" class="hidden bg-gray-100 text-gray-600 font-bold py-3 px-6 rounded-xl hover:bg-gray-200 transition all text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-white p-7 rounded-2xl shadow-xl border border-gray-100 overflow-x-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fa-solid fa-list-check text-indigo-500 mr-3"></i>Asignaciones Registradas
+                </h3>
+                <input type="text" id="buscar-tabla" placeholder="Buscar por docente o curso..." class="p-2 border border-gray-200 rounded-lg text-sm bg-gray-50">
+            </div>
+
+            <table class="w-full text-sm text-left border-collapse">
+                <thead class="text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3">Docente</th>
+                        <th class="px-4 py-3 text-center">Curso</th>
+                        <th class="px-4 py-3">Materia</th>
+                        <th class="px-4 py-3 text-center">Periodo</th>
+                        <th class="px-4 py-3 text-center">Acciones</th>
+                    }
+                </thead>
+                <tbody id="tabla-body" class="divide-y divide-gray-100">
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-gray-500">Cargando datos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    // Asegúrate de importar 'doc', 'getDoc', 'updateDoc' y 'deleteDoc'
+    import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Variables globales para guardar los nombres reales
+    let mapaDocentes = {};
+    let mapaGrados = {};
+    let mapaMaterias = {};
+
+    // --- 1. CARGA DE CATÁLOGOS (Selectores) ---
+    async function cargarCatalogos() {
+        try {
+            const [snapDoc, snapGra, snapPar, snapMat] = await Promise.all([
+                getDocs(query(collection(db, "usuarios"), orderBy("nombre_completo"))),
+                getDocs(collection(db, "grados")),
+                getDocs(collection(db, "paralelos")),
+                getDocs(query(collection(db, "materias"), orderBy("nombre")))
+            ]);
+
+            // Docentes
+            const sD = document.getElementById('select-docente');
+            sD.innerHTML = '<option value="">Seleccione Docente...</option>';
+            snapDoc.forEach(doc => {
+                if(doc.data().rol !== 'admin') {
+                    const data = doc.data();
+                    mapaDocentes[doc.id] = data.nombre_completo;
+                    sD.innerHTML += `<option value="${doc.id}">${data.nombre_completo}</option>`;
+                }
+            });
+
+            // Grados
+            const sG = document.getElementById('select-grado');
+            sG.innerHTML = '<option value="">Grado...</option>';
+            snapGra.forEach(doc => {
+                const nombre = doc.data().nombre || doc.id;
+                mapaGrados[doc.id] = nombre;
+                sG.innerHTML += `<option value="${doc.id}">${nombre}</option>`;
+            });
+
+            // Paralelos
+            const sP = document.getElementById('select-paralelo');
+            sP.innerHTML = '<option value="">Par...</option>';
+            snapPar.forEach(doc => sP.innerHTML += `<option value="${doc.id}">${doc.id}</option>`);
+
+            // Materias
+            const sM = document.getElementById('select-materia');
+            sM.innerHTML = '<option value="">Seleccione Materia...</option>';
+            snapMat.forEach(doc => {
+                const data = doc.data();
+                mapaMaterias[doc.id] = data.nombre;
+                sM.innerHTML += `<option value="${doc.id}">${data.nombre}</option>`;
+            });
+
+            // Una vez cargados los catálogos, cargamos la tabla
+            cargarTabla();
+
+        } catch (error) {
+            console.error("Error cargando catálogos:", error);
+            Swal.fire('Error Critico', 'No se pudieron cargar los datos de la base de datos.', 'error');
+        }
+    }
+
+    // --- 2. CARGA DE TABLA DE ASIGNACIONES ---
+    async function cargarTabla() {
+        const tbody = document.getElementById('tabla-body');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Actualizando lista...</td></tr>';
+
+        try {
+            const snapAsig = await getDocs(query(collection(db, "asignaciones"), orderBy("periodo", "desc")));
+            tbody.innerHTML = "";
+
+            if(snapAsig.empty) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">No hay asignaciones registradas.</td></tr>';
+                return;
+            }
+
+            snapAsig.forEach(doc => {
+                const a = doc.data();
+                // Buscamos los nombres reales usando los mapas que creamos en cargarCatalogos
+                const nombreDocente = mapaDocentes[a.id_docente] || '<span class="text-red-500">Docente no encontrado</span>';
+                const nombreGrado = mapaGrados[a.id_grado] || a.id_grado;
+                const nombreMateria = mapaMaterias[a.id_materia] || a.id_materia;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-medium text-gray-900">${nombreDocente}</td>
+                    <td class="px-4 py-4 text-center text-gray-700">${nombreGrado} "${a.id_paralelo}"</td>
+                    <td class="px-4 py-4 text-gray-700">${nombreMateria}</td>
+                    <td class="px-4 py-4 text-center font-mono text-gray-600 text-xs bg-gray-100 rounded">${a.periodo}</td>
+                    <td class="px-4 py-4 text-center flex justify-center gap-2">
+                        <button onclick="prepararEdicion('${doc.id}')" class="text-indigo-500 hover:text-indigo-700 p-2 rounded-lg hover:bg-indigo-50" title="Editar">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="confirmarEliminacion('${doc.id}', '${nombreDocente}', '${nombreGrado} ${a.id_paralelo}')" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50" title="Eliminar">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error("Error cargando tabla:", error);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500">Error al cargar los datos.</td></tr>';
+        }
+    }
+
+    // --- 3. GUARDAR / ACTUALIZAR ASIGNACIÓN ---
+    document.getElementById('form-asignacion').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit');
+        const idAsig = document.getElementById('asig-id').value;
+        const modoEdicion = idAsig !== "";
+
+        btn.disabled = true;
+        btn.innerText = modoEdicion ? "ACTUALIZANDO..." : "GUARDANDO...";
+
+        // Usamos los campos exactamente como en tu imagen
+        const data = {
+            id_docente: document.getElementById('select-docente').value,
+            id_grado: document.getElementById('select-grado').value,
+            id_paralelo: document.getElementById('select-paralelo').value,
+            id_materia: document.getElementById('select-materia').value,
+            periodo: document.getElementById('periodo').value
+        };
+
+        try {
+            if (modoEdicion) {
+                // Modo Actualizar
+                await updateDoc(doc(db, "asignaciones", idAsig), data);
+                Swal.fire({
+                    title: '¡Actualización Exitosa!',
+                    text: 'KhipuSmart360 Informa: Los cambios en la asignación se han guardado correctamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#2563eb'
+                });
+            } else {
+                // Modo Nuevo
+                await addDoc(collection(db, "asignaciones"), data);
+                Swal.fire({
+                    title: '¡Asignación Guardada!',
+                    text: 'KhipuSmart360 Informa: El docente ha sido vinculado al curso exitosamente.',
+                    icon: 'success',
+                    confirmButtonColor: '#2563eb'
+                });
+            }
+            cancelarEdicion(); // Limpia el formulario y vuelve a modo normal
+            cargarTabla();     // Recarga la tabla para ver los cambios
+
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            Swal.fire('Error de Guardado', 'KhipuSmart360 no pudo procesar la solicitud. Verifique los datos o intente más tarde.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = modoEdicion ? "ACTUALIZAR ASIGNACIÓN" : "GUARDAR ASIGNACIÓN";
+        }
+    });
+
+    // --- 4. FUNCIONES DE EDICIÓN Y ELIMINACIÓN (Exponer a window) ---
+    
+    // Preparar el formulario para editar
+    window.prepararEdicion = async (id) => {
+        // Hacemos scroll hacia arriba para ver el formulario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        const docRef = doc(db, "asignaciones", id);
+        try {
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const a = snap.data();
+                document.getElementById('asig-id').value = id;
+                document.getElementById('select-docente').value = a.id_docente;
+                document.getElementById('select-grado').value = a.id_grado;
+                document.getElementById('select-paralelo').value = a.id_paralelo;
+                document.getElementById('select-materia').value = a.id_materia;
+                document.getElementById('periodo').value = a.periodo;
+
+                // Cambiar interfaz a modo edición
+                document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-orange-500 mr-3"></i>Modificar Asignación';
+                document.getElementById('form-title').parentElement.classList.add('border-orange-400');
+                document.getElementById('btn-submit').innerText = 'ACTUALIZAR ASIGNACIÓN';
+                document.getElementById('btn-submit').classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                document.getElementById('btn-submit').classList.add('bg-orange-600', 'hover:bg-orange-700');
+                document.getElementById('btn-cancelar').classList.remove('hidden');
+            }
+        } catch (error) { console.error(error); }
+    }
+
+    // Cancelar la edición y resetear el formulario
+    window.cancelarEdicion = () => {
+        document.getElementById('form-asignacion').reset();
+        document.getElementById('asig-id').value = "";
+        document.getElementById('periodo').value = "2026-2027"; // Valor por defecto
+
+        // Volver interfaz a modo nuevo
+        document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-circle-plus text-indigo-500 mr-3"></i>Nueva Vinculación';
+        document.getElementById('form-title').parentElement.classList.remove('border-orange-400');
+        document.getElementById('btn-submit').innerText = 'GUARDAR ASIGNACIÓN';
+        document.getElementById('btn-submit').classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        document.getElementById('btn-submit').classList.remove('bg-orange-600', 'hover:bg-orange-700');
+        document.getElementById('btn-cancelar').classList.add('hidden');
+    }
+
+    document.getElementById('btn-cancelar').addEventListener('click', cancelarEdicion);
+
+    // Confirmar eliminación con SweetAlert2 personalizado
+    window.confirmarEliminacion = (id, docente, curso) => {
+        Swal.fire({
+            title: '¿Está seguro de eliminar?',
+            html: `<div class="text-left bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <p class="text-sm">Se eliminará la vinculación de:</p>
+                    <p class="font-bold text-indigo-900 mt-1">${docente}</p>
+                    <p class="text-xs text-gray-500 mt-1">Curso: ${curso}</p>
+                    <p class="text-xs text-red-600 mt-3 font-medium">Esta acción no se puede deshacer.</p>
+                   </div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444', // Rojo
+            cancelButtonColor: '#6b7280',  // Gris
+            confirmButtonText: 'Sí, eliminar permanentemente',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await deleteDoc(doc(db, "asignaciones", id));
+                    Swal.fire({
+                        title: '¡Registro Eliminado!',
+                        text: 'KhipuSmart360 Informa: La asignación ha sido removida del sistema.',
+                        icon: 'success',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    cargarTabla();
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('Error', 'No se pudo eliminar el registro. Intente de nuevo.', 'error');
+                }
+            }
+        });
+    }
+
+    // Buscador simple en tabla
+    document.getElementById('buscar-tabla').addEventListener('keyup', (e) => {
+        const texto = e.target.value.toLowerCase();
+        const filas = document.getElementById('tabla-body').getElementsByTagName('tr');
+        Array.from(filas).forEach(fila => {
+            if(fila.cells.length < 5) return; // Salta si es la fila de 'cargando' o 'vacia'
+            const docente = fila.cells[0].innerText.toLowerCase();
+            const curso = fila.cells[1].innerText.toLowerCase();
+            if(docente.includes(texto) || curso.includes(texto)) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    });
+
+    // Inicio
+    cargarCatalogos();
+
+</script>
+
+</body>
+</html>
