@@ -12,50 +12,51 @@
         body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
         .header-admin { background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); }
         .badge-docente { background: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9; }
+        /* Forzar color negro en toda la tabla */
+        .texto-matriz { color: #1a1a1a !important; font-weight: 600; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-<div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+<div class="max-w-[95%] mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
     <div class="header-admin p-6 text-white flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-black tracking-tight"><i class="fa-solid fa-shield-halved mr-2"></i>Panel de Control Estudiantil</h1>
             <p class="text-indigo-100 text-xs opacity-80 uppercase tracking-widest font-bold">Acceso Nivel: Administrador</p>
         </div>
-        <button onclick="window.location.href='registro_estudiante.html'" class="bg-white text-indigo-900 px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all">
-            <i class="fa-solid fa-plus mr-1"></i> NUEVO ESTUDIANTE
+        <button onclick="window.location.href='estudiantes.html'" class="bg-white text-indigo-900 px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-50 shadow-lg transition-all transform hover:scale-105">
+            <i class="fa-solid fa-user-plus mr-2"></i> NUEVO ESTUDIANTE
         </button>
     </div>
 
     <div class="p-6 bg-gray-50 border-b border-gray-100">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-                <label class="block text-[10px] font-black text-gray-400 mb-2 uppercase">1. Periodo:</label>
-                <select id="select-periodo" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm font-bold">
+                <label class="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest">1. Periodo Lectivo:</label>
+                <select id="select-periodo" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm font-bold bg-white">
                     <option value="">Cargando...</option>
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-black text-gray-400 mb-2 uppercase">2. Grado:</label>
-                <select id="select-grado" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm">
+                <label class="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest">2. Grado / Año:</label>
+                <select id="select-grado" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm bg-white">
                     <option value="">Seleccione Periodo...</option>
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-black text-gray-400 mb-2 uppercase">3. Paralelo:</label>
-                <select id="select-paralelo" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm">
+                <label class="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest">3. Paralelo:</label>
+                <select id="select-paralelo" class="w-full p-3 rounded-xl border-2 border-gray-200 outline-none focus:border-indigo-500 text-sm bg-white">
                     <option value="">Seleccione Grado...</option>
                 </select>
             </div>
-            <button id="btn-buscar" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-magnifying-glass"></i> CONSULTAR
+            <button id="btn-buscar" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
+                <i class="fa-solid fa-magnifying-glass"></i> Consultar Nómina
             </button>
         </div>
 
-        <div id="container-docentes" class="mt-6 p-4 bg-indigo-50 rounded-2xl hidden border border-indigo-100">
-            <span class="text-[10px] font-black text-indigo-400 uppercase block mb-2">Docentes Vinculados a este Curso:</span>
-            <div id="lista-docentes" class="flex flex-wrap gap-2">
-                </div>
+        <div id="container-docentes" class="mt-6 p-4 bg-indigo-50 rounded-2xl hidden border border-indigo-100 shadow-inner">
+            <span class="text-[10px] font-black text-indigo-400 uppercase block mb-2 tracking-tighter">Personal Docente Asignado a este Curso:</span>
+            <div id="lista-docentes" class="flex flex-wrap gap-2"></div>
         </div>
     </div>
 
@@ -63,29 +64,30 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
                 <thead>
-                    <tr class="text-gray-400 border-b border-gray-100">
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter">Apellidos y Nombres</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter text-center">Cédula</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter text-center">Edad</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter">Representante / Telf.</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter">Dirección</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter text-center">NEE</th>
-                        <th class="px-2 py-4 uppercase font-black tracking-tighter text-center">Acciones</th>
+                    <tr class="text-indigo-900 border-b-2 border-indigo-50">
+                        <th class="px-2 py-4 uppercase font-black tracking-tight">Apellidos y Nombres</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Cédula</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Edad</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight">Representante</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Teléfono</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight">Dirección</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">NEE</th>
+                        <th class="px-2 py-4 uppercase font-black tracking-tight text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-body" class="divide-y divide-gray-50">
+                <tbody id="tabla-body" class="divide-y divide-gray-100">
                     <tr>
-                        <td colspan="7" class="text-center py-20 text-gray-300 italic">Aplique los filtros para generar la nómina.</td>
+                        <td colspan="8" class="text-center py-20 text-gray-400 italic font-medium text-sm">Use los filtros superiores para generar la lista de estudiantes.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         
         <div class="mt-8 flex justify-between items-center border-t pt-6">
-            <a href="dashboard.html" class="text-gray-400 hover:text-indigo-600 font-bold text-sm transition-all">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Panel Principal
+            <a href="dashboard.html" class="text-gray-500 hover:text-indigo-600 font-bold text-sm transition-all flex items-center">
+                <i class="fa-solid fa-arrow-left-long mr-2"></i> Volver al Dashboard
             </a>
-            <div id="contador" class="bg-gray-100 px-4 py-1 rounded-full text-[10px] font-black text-gray-500 uppercase">Estudiantes: 0</div>
+            <div id="contador" class="bg-indigo-900 px-6 py-2 rounded-xl text-[10px] font-black text-white uppercase tracking-widest shadow-md">Estudiantes: 0</div>
         </div>
     </div>
 </div>
@@ -106,19 +108,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let dbUsuarios = {}; // Para traducir IDs de docentes a nombres
+    let dbUsuarios = {}; 
 
-    // 1. CARGA INICIAL: Periodos y Usuarios
     async function init() {
-        // Cargar usuarios para saber los nombres de los profes
         const snapUsers = await getDocs(collection(db, "usuarios"));
         snapUsers.forEach(u => dbUsuarios[u.id] = u.data().nombre_completo);
 
-        // Cargar Periodos únicos de la tabla asignaciones
         const snapAsig = await getDocs(collection(db, "asignaciones"));
         const selectP = document.getElementById('select-periodo');
         let periodos = new Set();
-        
         snapAsig.forEach(d => periodos.add(d.data().periodo));
         
         selectP.innerHTML = '<option value="">Periodo...</option>';
@@ -127,13 +125,11 @@
         });
     }
 
-    // Filtros dinámicos de Grado y Paralelo
     document.getElementById('select-periodo').addEventListener('change', async (e) => {
         const p = e.target.value;
         const snap = await getDocs(query(collection(db, "asignaciones"), where("periodo", "==", p)));
         let grados = new Set();
         snap.forEach(d => grados.add(d.data().id_grado));
-        
         const sG = document.getElementById('select-grado');
         sG.innerHTML = '<option value="">Grado...</option>';
         grados.forEach(g => sG.innerHTML += `<option value="${g}">${g}</option>`);
@@ -145,34 +141,30 @@
         const snap = await getDocs(query(collection(db, "asignaciones"), where("periodo", "==", p), where("id_grado", "==", g)));
         let paras = new Set();
         snap.forEach(d => paras.add(d.data().id_paralelo));
-        
         const sP = document.getElementById('select-paralelo');
         sP.innerHTML = '<option value="">Paralelo...</option>';
         paras.forEach(pa => sP.innerHTML += `<option value="${pa}">${pa}</option>`);
     });
 
-    // Función Edad
     function calcularEdad(f) {
         if(!f) return "---";
         const hoy = new Date();
         const cumple = new Date(f);
         let edad = hoy.getFullYear() - cumple.getFullYear();
         if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() === cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
-        return edad;
+        return edad + " años";
     }
 
-    // BOTÓN BUSCAR
     document.getElementById('btn-buscar').addEventListener('click', async () => {
         const periodo = document.getElementById('select-periodo').value;
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
         const tbody = document.getElementById('tabla-body');
 
-        if(!paralelo) return Swal.fire('Error', 'Complete los filtros', 'error');
+        if(!paralelo) return Swal.fire('Faltan Filtros', 'Seleccione Periodo, Grado y Paralelo', 'info');
 
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-20 text-indigo-600 font-bold">Procesando información...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-20 text-indigo-600 font-black animate-pulse">GENERANDO MATRIZ...</td></tr>';
 
-        // 1. Mostrar Docentes Asignados
         const qDoc = query(collection(db, "asignaciones"), where("periodo", "==", periodo), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
         const snapDoc = await getDocs(qDoc);
         const contDoc = document.getElementById('container-docentes');
@@ -183,45 +175,38 @@
             contDoc.classList.remove('hidden');
             snapDoc.forEach(d => {
                 const nombre = dbUsuarios[d.data().id_docente] || "Desconocido";
-                const materia = d.data().id_materia || "General";
-                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-bold">
-                    <i class="fa-solid fa-chalkboard-user mr-1"></i> ${nombre} (${materia})
-                </span>`;
+                const materia = d.data().id_materia || "Docencia";
+                listDoc.innerHTML += `<span class="badge-docente px-3 py-1 rounded-lg text-[10px] font-black uppercase"><i class="fa-solid fa-user-tie mr-1"></i> ${nombre} | <span class="opacity-60">${materia}</span></span>`;
             });
         }
 
-        // 2. Cargar Estudiantes (Sin OrderBy para evitar error de índice)
         const qEst = query(collection(db, "estudiantes"), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
         const snapEst = await getDocs(qEst);
-        
         let estudiantes = [];
         snapEst.forEach(d => estudiantes.push({ id: d.id, ...d.data() }));
 
-        // ORDENAMIENTO EN JAVA PARA EVITAR ERROR DE ÍNDICE
         estudiantes.sort((a,b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
 
         tbody.innerHTML = "";
         estudiantes.forEach(e => {
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-gray-50 transition-all";
+            tr.className = "hover:bg-indigo-50 transition-all border-b border-gray-100 texto-matriz";
             tr.innerHTML = `
-                <td class="px-2 py-4">
-                    <div class="font-bold text-indigo-900 uppercase">${e.apellidos} ${e.nombres}</div>
+                <td class="px-2 py-4 font-black text-indigo-900 uppercase tracking-tight">${e.apellidos} ${e.nombres}</td>
+                <td class="px-2 py-4 text-center font-mono">${e.cedula || '---'}</td>
+                <td class="px-2 py-4 text-center">${calcularEdad(e.fecha_nacimiento)}</td>
+                <td class="px-2 py-4">${e.nombre_repre || '---'}</td>
+                <td class="px-2 py-4 text-center text-green-700">
+                    ${e.telefono_repre ? `<i class="fa-brands fa-whatsapp mr-1"></i>${e.telefono_repre}` : '---'}
                 </td>
-                <td class="px-2 py-4 text-center font-mono text-gray-400">${e.cedula || '---'}</td>
-                <td class="px-2 py-4 text-center text-gray-600">${calcularEdad(e.fecha_nacimiento)} años</td>
-                <td class="px-2 py-4">
-                    <div class="font-bold text-gray-700">${e.nombre_repre || '---'}</div>
-                    <div class="text-[10px] text-green-600 font-bold"><i class="fa-brands fa-whatsapp"></i> ${e.telefono_repre || '---'}</div>
-                </td>
-                <td class="px-2 py-4 text-gray-500 italic text-[10px]">${e.direccion || 'No registrada'}</td>
+                <td class="px-2 py-4 italic text-[10px]">${e.direccion || '---'}</td>
                 <td class="px-2 py-4 text-center">
-                    <span class="px-2 py-1 rounded-md font-black ${e.nee === 'SI' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-300'}">${e.nee || 'NO'}</span>
+                    <span class="px-2 py-1 rounded-md ${e.nee === 'SI' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-400 opacity-30'}">${e.nee || 'NO'}</span>
                 </td>
                 <td class="px-2 py-4 text-center">
-                    <div class="flex justify-center gap-2">
-                        <button onclick="window.location.href='registro_estudiante.html?id=${e.id}'" class="text-indigo-600 hover:bg-indigo-100 p-2 rounded-lg transition-all"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="eliminarEst('${e.id}', '${e.apellidos}')" class="text-red-500 hover:bg-red-100 p-2 rounded-lg transition-all"><i class="fa-solid fa-trash"></i></button>
+                    <div class="flex justify-center gap-3">
+                        <button onclick="window.location.href='estudiantes.html?id=${e.id}'" class="text-indigo-600 hover:scale-125 transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="eliminarEst('${e.id}', '${e.apellidos}')" class="text-red-500 hover:scale-125 transition-all"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 </td>
             `;
@@ -230,19 +215,18 @@
         document.getElementById('contador').innerText = `Estudiantes: ${estudiantes.length}`;
     });
 
-    // FUNCIÓN ELIMINAR
     window.eliminarEst = (id, nombre) => {
         Swal.fire({
             title: `¿Eliminar a ${nombre}?`,
-            text: "Esta acción no se puede deshacer.",
+            text: "Esta acción removerá al estudiante de la base de datos.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef5350',
-            confirmButtonText: 'Sí, eliminar'
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Eliminar Registro'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 await deleteDoc(doc(db, "estudiantes", id));
-                Swal.fire('Eliminado', 'El estudiante ha sido removido.', 'success');
+                Swal.fire('Eliminado', 'Registro removido con éxito.', 'success');
                 document.getElementById('btn-buscar').click();
             }
         });
