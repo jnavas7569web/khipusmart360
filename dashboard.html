@@ -300,70 +300,51 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    const docRef = doc(db, "usuarios", user.uid);
-                    const docSnap = await getDoc(docRef);
+    if (user) {
+        try {
+            const docRef = doc(db, "usuarios", user.uid);
+            const docSnap = await getDoc(docRef);
 
-                    const nombreDoc = document.getElementById('nombre-docente');
-                    const cursoDoc = document.getElementById('curso-docente');
-                    const pAdmin = document.getElementById('panel-admin');
-                    const cajaTop = document.getElementById('caja-top-estudiantes');
-                    const avIni = document.getElementById('avatar-iniciales');
+            if (docSnap.exists()) {
+                const d = docSnap.data();
+                
+                // 1. Aquí definimos el rol (esto ya lo tienes)
+                const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
+                
+                // 2. BUSCAMOS EL ENLACE EN EL SIDEBAR (Lo nuevo)
+                const linkRegistro = document.querySelector('a[href="estudiantes.html"]');
 
-                    if (docSnap.exists()) {
-                        const d = docSnap.data();
-                        const isAdmin = (d.rol === 'admin' || d.rol === 'superadmin');
-                        
-                        // Nombres e Iniciales
-                        nombreDoc.innerText = (isAdmin ? "Admin: " : "Prof. ") + d.nombre_completo;
-                        avIni.innerText = d.nombre_completo.substring(0,2).toUpperCase();
+                const pAdmin = document.getElementById('panel-admin');
+                const cursoDoc = document.getElementById('curso-docente');
+                const cajaTop = document.getElementById('caja-top-estudiantes');
 
-                        if (isAdmin) {
-                            cursoDoc.innerText = "Gestión Global del Sistema";
-                            pAdmin.style.display = 'block';
-                            if(cajaTop) cajaTop.style.display = 'none';
+                if (isAdmin) {
+                    // --- LÓGICA PARA ADMIN ---
+                    pAdmin.style.display = 'block'; 
+                    cursoDoc.innerText = "Gestión Global del Sistema";
+                    if(cajaTop) cajaTop.style.display = 'none';
 
-                            // Admin cuenta TODO
-                            const qAll = query(collection(db, "estudiantes"));
-                            const snapAll = await getCountFromServer(qAll);
-                            animarConteo('total-estudiantes', snapAll.data().count);
-                        } else {
-                            cursoDoc.innerText = "Docente Autorizado";
-                            pAdmin.style.display = 'none';
-                            if(cajaTop) cajaTop.style.display = 'block';
+                    // MOSTRAMOS el link de registro de estudiantes en el menú
+                    if(linkRegistro) linkRegistro.style.display = 'flex';
 
-                            // --- NUEVA LÓGICA DE ASIGNACIONES ---
-                            const qAsig = query(collection(db, "asignaciones"), where("id_docente", "==", user.uid));
-                            const snapAsig = await getDocs(qAsig);
+                    // (Aquí sigue tu código de conteo para Admin...)
+                } else {
+                    // --- LÓGICA PARA DOCENTE ---
+                    pAdmin.style.display = 'none';
+                    cursoDoc.innerText = "Docente Autorizado";
+                    if(cajaTop) cajaTop.style.display = 'block';
 
-                            let totalAcumulado = 0;
-                            if (!snapAsig.empty) {
-                                // Usamos un Set para no contar duplicados si da varias materias en un mismo curso
-                                let cursosProcesados = new Set();
-                                
-                                for (const docAsig of snapAsig.docs) {
-                                    const asig = docAsig.data();
-                                    const cursoKey = `${asig.id_grado}-${asig.id_paralelo}`;
-                                    
-                                    if (!cursosProcesados.has(cursoKey)) {
-                                        cursosProcesados.add(cursoKey);
-                                        const qEst = query(collection(db, "estudiantes"), 
-                                                           where("id_grado", "==", asig.id_grado),
-                                                           where("id_paralelo", "==", asig.id_paralelo));
-                                        const snapCount = await getCountFromServer(qEst);
-                                        totalAcumulado += snapCount.data().count;
-                                    }
-                                }
-                            }
-                            animarConteo('total-estudiantes', totalAcumulado);
-                        }
-                    }
-                } catch (e) { console.error("Error:", e); }
-            } else {
-                window.location.href = "index.html";
+                    // OCULTAMOS el link de registro de estudiantes para el profe
+                    if(linkRegistro) linkRegistro.style.display = 'none';
+
+                    // (Aquí sigue tu código de conteo por asignaciones...)
+                }
             }
-        });
+        } catch (e) { console.error("Error:", e); }
+    } else {
+        window.location.href = "index.html";
+    }
+});
 
         // Eventos de Menú Mobile
         const hamburger = document.getElementById('hamburger');
