@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhipuSmart360 - Reporte Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --azul: #1a237e; --gris-fondo: #f4f7f6; }
+        body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; font-size: 11px; }
+        .header-reporte { background: linear-gradient(135deg, #1a237e 0%, #5c6bc0 100%); color: white; }
+        .badge { padding: 3px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; border: 1px solid; }
+        .badge-true { background: #dcfce7; color: #166534; border-color: #166534; }
+        .badge-false { background: #fee2e2; color: #991b1b; border-color: #991b1b; }
+        .badge-atraso { background: #fef3c7; color: #92400e; border-color: #92400e; }
+        .badge-justificado { background: #e0f2fe; color: #075985; border-color: #075985; }
+        @media print { .no-print { display: none !important; } .print-card { box-shadow: none !important; border: 1px solid #ddd; } }
+    </style>
+</head>
+<body class="p-2 md:p-8">
+
+<div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border print-card">
+    <div class="header-reporte p-6 text-center">
+        <h1 class="text-xl font-black tracking-tighter uppercase italic">Control de Asistencia - Reporte Avanzado</h1>
+    </div>
+
+    <div class="p-6 bg-gray-50 border-b no-print">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-[9px] font-black text-gray-400 mb-1 uppercase">Seleccione Curso:</label>
+                <select id="select-curso" class="w-full p-2.5 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500">
+                    <option value="">Cargando...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[9px] font-black text-gray-400 mb-1 uppercase">Fecha Inicio:</label>
+                <input type="date" id="f-desde" class="w-full p-2.5 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-700">
+            </div>
+            <div>
+                <label class="block text-[9px] font-black text-gray-400 mb-1 uppercase">Fecha Fin:</label>
+                <input type="date" id="f-hasta" class="w-full p-2.5 bg-white border-2 border-gray-200 rounded-xl font-bold text-gray-700">
+            </div>
+            <button id="btn-procesar" class="bg-indigo-600 hover:bg-indigo-800 text-white font-black py-3 rounded-xl text-[10px] uppercase shadow-lg transition-all active:scale-95">
+                <i class="fa-solid fa-magnifying-glass mr-2"></i> Generar Matriz
+            </button>
+        </div>
+    </div>
+
+    <div class="p-4 md:p-8">
+        <div class="overflow-x-auto border rounded-2xl mb-6">
+            <table class="w-full text-left">
+                <thead class="bg-gray-100 border-b">
+                    <tr id="cabecera-dinamica" class="text-indigo-900 font-black uppercase text-[10px] tracking-widest">
+                        <th class="px-6 py-4">Información del Estudiante</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-pro" class="divide-y divide-gray-100 text-gray-700 font-medium italic">
+                    <tr><td class="text-center py-20">Configure los filtros superiores para visualizar datos.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="visuales-pro" class="hidden">
+            <div id="totales-pro" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center"></div>
+            <div id="grafico-pro" class="p-6 bg-gray-50 rounded-2xl border">
+                <canvas id="chartPro" style="max-height: 220px;"></canvas>
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-between items-center no-print">
+            <a href="dashboard.html" class="text-gray-400 hover:text-indigo-600 font-bold text-xs uppercase"><i class="fa-solid fa-house mr-2"></i> Inicio</a>
+            <button onclick="window.print()" class="bg-gray-800 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg"><i class="fa-solid fa-print mr-2"></i> Imprimir</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
+        authDomain: "khipusmart360.firebaseapp.com",
+        projectId: "khipusmart360",
+        storageBucket: "khipusmart360.firebasestorage.app",
+        messagingSenderId: "240593523716",
+        appId: "1:240593523716:web:03cbfe1f8f41f1b2a75151"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let miGrafico = null;
+
+    // Cargar Cursos
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const q = query(collection(db, "asignaciones"), where("id_docente", "==", user.uid));
+            const snap = await getDocs(q);
+            const select = document.getElementById('select-curso');
+            select.innerHTML = '<option value="">Grado / Paralelo...</option>';
+            snap.forEach(d => {
+                const data = d.data();
+                select.innerHTML += `<option value="${data.id_grado}|${data.id_paralelo}">${data.id_grado} - ${data.id_paralelo}</option>`;
+            });
+            const hoy = new Date();
+            document.getElementById('f-desde').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            document.getElementById('f-hasta').valueAsDate = hoy;
+        } else { window.location.href = "index.html"; }
+    });
+
+    document.getElementById('btn-procesar').addEventListener('click', async () => {
+        const curso = document.getElementById('select-curso').value;
+        const dStr = document.getElementById('f-desde').value;
+        const hStr = document.getElementById('f-hasta').value;
+
+        if(!curso || !dStr || !hStr) return Swal.fire('Error', 'Faltan filtros', 'error');
+
+        const [g, p] = curso.split('|');
+        const finicio = new Date(dStr + "T00:00:00");
+        const ffin = new Date(hStr + "T23:59:59");
+        const esMismo = (dStr === hStr);
+
+        const tabla = document.getElementById('tabla-pro');
+        tabla.innerHTML = '<tr><td class="text-center py-20 animate-pulse font-black text-indigo-600 uppercase">Consultando Firebase...</td></tr>';
+
+        try {
+            // Estudiantes
+            const qE = query(collection(db, "estudiantes"), where("id_grado", "==", g), where("id_paralelo", "==", p));
+            const snapE = await getDocs(qE);
+            let estudiantes = [];
+            snapE.forEach(d => estudiantes.push({ id: d.id, ...d.data() }));
+            estudiantes.sort((a,b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
+
+            // Asistencias Globales del Curso
+            const qA = query(collection(db, "asistencias_diarias"), where("id_grado", "==", g), where("id_paralelo", "==", p));
+            const snapA = await getDocs(qA);
+            const dataAsis = snapA.docs.map(d => d.data());
+
+            tabla.innerHTML = "";
+            document.getElementById('cabecera-dinamica').innerHTML = esMismo 
+                ? `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4 text-center">Estado</th>`
+                : `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4">Representante</th><th class="px-6 py-4 text-center">P - F - A - J</th>`;
+
+            let n = 1;
+            let glob = { t:0, p:0, f:0, a:0, j:0 };
+            let rank = [];
+
+            estudiantes.forEach(est => {
+                const misAsis = dataAsis.filter(a => {
+                    const f = a.fecha.toDate();
+                    return a.id_estudiante === est.id && f >= finicio && f <= ffin;
+                });
+
+                let c = { p:0, f:0, a:0, j:0 };
+                let last = "---";
+                misAsis.forEach(a => {
+                    const st = String(a.asistencia).toLowerCase();
+                    if(st === "true"){ c.p++; last = "true"; }
+                    else if(st === "false"){ c.f++; last = "false"; }
+                    else if(st === "atraso"){ c.a++; last = "atraso"; }
+                    else if(st === "justificado"){ c.j++; last = "justificado"; }
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b";
+
+                if(esMismo){
+                    glob.t++; glob.p += c.p; glob.f += c.f; glob.a += c.a; glob.j += c.j;
+                    tr.innerHTML = `<td class="px-6 py-3 text-center text-gray-300 font-black">${n++}</td><td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos} ${est.Nombres}</td><td class="px-6 py-3 text-center"><span class="badge badge-${last}">${traducir(last)}</span></td>`;
+                } else {
+                    rank.push({ n: (est.apellidos || "").split(' ')[0], v: c.f + c.a });
+                    tr.innerHTML = `<td class="px-6 py-3 text-center text-gray-300 font-black">${n++}</td><td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos} ${est.Nombres}</td><td class="px-6 py-3 text-[9px]"><b>${est.representante || '---'}</b><br>${est.telefono_repre || ''}</td><td class="px-6 py-3 text-center font-bold text-indigo-600">${c.p}-${c.f}-${c.a}-${c.j}</td>`;
+                }
+                tabla.appendChild(tr);
+            });
+
+            document.getElementById('visuales-pro').classList.remove('hidden');
+            if(esMismo){
+                document.getElementById('grafico-pro').classList.add('hidden');
+                document.getElementById('totales-pro').innerHTML = `
+                    <div class="bg-gray-50 p-3 rounded-xl border">TOTAL: ${glob.t}</div>
+                    <div class="bg-green-50 p-3 rounded-xl border border-green-200 text-green-700">P: ${glob.p}</div>
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-200 text-red-700">F: ${glob.f}</div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-700">J: ${glob.j}</div>`;
+            } else {
+                document.getElementById('totales-pro').innerHTML = "";
+                document.getElementById('grafico-pro').classList.remove('hidden');
+                actualizarGrafico(rank);
+            }
+        } catch (e) { console.error(e); }
+    });
+
+    function traducir(v) {
+        const m = {"true":"Presente", "false":"Falta", "atraso":"Atraso", "justificado":"Justificado"};
+        return m[v] || "N/A";
+    }
+
+    function actualizarGrafico(datos) {
+        const top = datos.sort((a,b) => b.v - a.v).filter(d => d.v > 0).slice(0, 5);
+        if(miGrafico) miGrafico.destroy();
+        if(top.length === 0) return document.getElementById('grafico-pro').classList.add('hidden');
+        const ctx = document.getElementById('chartPro').getContext('2d');
+        miGrafico = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: top.map(d => d.n),
+                datasets: [{ label: 'Inasistencias', data: top.map(d => d.v), backgroundColor: '#1a237e', borderRadius: 6 }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }
+</script>
+</body>
+</html>
