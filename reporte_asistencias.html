@@ -67,7 +67,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, Timestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -93,7 +93,7 @@
         const esMismoDia = (desdeStr === hastaStr);
         document.getElementById('info-filtros').innerText = `GRADO: ${grado} "${paralelo}" | PERIODO: ${desdeStr} AL ${hastaStr}`;
 
-        // CORRECCIÓN CLAVE: Crear rangos de tiempo para no fallar por milisegundos
+        // OBVIAR HORA: Creamos el rango del día completo
         const fInicio = new Date(desdeStr + "T00:00:00");
         const fFin = new Date(hastaStr + "T23:59:59");
 
@@ -101,7 +101,7 @@
         const cabecera = document.getElementById('cabecera-tabla');
 
         try {
-            // 1. Obtener Estudiantes (id_grado es String "7")
+            // 1. Traer Estudiantes (id_grado es String "7")
             const qEst = query(collection(db, "estudiantes"), 
                                where("id_grado", "==", grado), 
                                where("id_paralelo", "==", paralelo));
@@ -109,11 +109,10 @@
             const snapEst = await getDocs(qEst);
             let listaEst = [];
             snapEst.forEach(d => listaEst.push({ id: d.id, ...d.data() }));
-            
             listaEst.sort((a, b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
 
             if (listaEst.length === 0) {
-                tabla.innerHTML = `<tr><td colspan="3" class="text-center py-20 text-red-500 font-bold uppercase">No hay estudiantes en Grado ${grado} Paralelo ${paralelo}</td></tr>`;
+                tabla.innerHTML = `<tr><td colspan="3" class="text-center py-20 italic">No hay estudiantes en el curso ${grado}${paralelo}</td></tr>`;
                 return;
             }
 
@@ -121,30 +120,36 @@
             let statsDia = { total: 0, p: 0, f: 0, a: 0, j: 0 };
             let dataGrafico = [];
 
+            // Configurar Cabeceras
             if (esMismoDia) {
-                cabecera.innerHTML = `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Apellidos y Nombres</th><th class="px-6 py-4 text-center">Estado</th>`;
+                cabecera.innerHTML = `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4 text-center">Asistencia</th>`;
                 document.getElementById('resumen-dia').classList.remove('hidden');
             } else {
-                cabecera.innerHTML = `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4">Representante / Tel.</th><th class="px-6 py-4 text-center text-indigo-800 font-black">P - F - A - J</th>`;
+                cabecera.innerHTML = `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4">Representante / Tel.</th><th class="px-6 py-4 text-center">P-F-A-J</th>`;
                 document.getElementById('contenedor-grafico').classList.remove('hidden');
             }
 
+            // 2. Traer TODAS las asistencias de este curso y fecha de un solo golpe (Más eficiente)
+            const qAsisGlobal = query(collection(db, "asistencias_diarias"), 
+                where("id_grado", "==", grado),
+                where("id_paralelo", "==", paralelo),
+                where("fecha", ">=", Timestamp.fromDate(fInicio)),
+                where("fecha", "<=", Timestamp.fromDate(fFin))
+            );
+            
+            const snapAsisGlobal = await getDocs(qAsisGlobal);
+            const todasAsis = snapAsisGlobal.docs.map(d => d.data());
+
             let num = 1;
             for (const est of listaEst) {
-                // Buscamos asistencias usando el rango de fechas (MAYOR O IGUAL que inicio y MENOR O IGUAL que fin)
-                const qAsis = query(collection(db, "asistencias_diarias"), 
-                    where("id_estudiante", "==", est.id),
-                    where("fecha", ">=", Timestamp.fromDate(fInicio)),
-                    where("fecha", "<=", Timestamp.fromDate(fFin))
-                );
+                // Filtramos del array global las que pertenecen a este estudiante
+                const misAsis = todasAsis.filter(a => a.id_estudiante === est.id);
                 
-                const snapAsis = await getDocs(qAsis);
                 let cnt = { p: 0, f: 0, a: 0, j: 0 };
                 let ultimoE = "---";
 
-                snapAsis.forEach(dAsis => {
-                    const data = dAsis.data();
-                    const edo = String(data.asistencia).toLowerCase().trim();
+                misAsis.forEach(data => {
+                    const edo = String(data.asistencia).toLowerCase();
                     if (edo === "true") { cnt.p++; ultimoE = "true"; }
                     else if (edo === "false") { cnt.f++; ultimoE = "false"; }
                     else if (edo === "atraso") { cnt.a++; ultimoE = "atraso"; }
@@ -152,7 +157,7 @@
                 });
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 border-b border-gray-100";
+                tr.className = "hover:bg-gray-50 border-b";
 
                 if (esMismoDia) {
                     statsDia.total++;
@@ -161,10 +166,17 @@
                     else if(ultimoE === "justificado") statsDia.j++;
                     else if(ultimoE === "atraso") statsDia.a++;
 
-                    tr.innerHTML = `<td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td><td class="px-6 py-3 font-bold uppercase text-indigo-900 text-[10px]">${est.apellidos || ''} ${est.Nombres || ''}</td><td class="px-6 py-3 text-center"><span class="badge badge-${ultimoE}">${traducir(ultimoE)}</span></td>`;
+                    tr.innerHTML = `
+                        <td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td>
+                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos || ''} ${est.Nombres || ''}</td>
+                        <td class="px-6 py-3 text-center"><span class="badge badge-${ultimoE}">${traducir(ultimoE)}</span></td>`;
                 } else {
-                    dataGrafico.push({ n: (est.apellidos || "Est").split(' ')[0], prob: cnt.f + cnt.a });
-                    tr.innerHTML = `<td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td><td class="px-6 py-3 font-bold uppercase text-indigo-900 text-[10px]">${est.apellidos || ''} ${est.Nombres || ''}</td><td class="px-6 py-3 text-[9px]"><b>${est.representante || '---'}</b><br><span class="text-blue-500 font-bold">${est.telefono_repre || ''}</span></td><td class="px-6 py-3 text-center font-bold font-mono text-[10px]"><span class="text-green-600">${cnt.p}</span> - <span class="text-red-600">${cnt.f}</span> - <span class="text-orange-500">${cnt.a}</span> - <span class="text-blue-500">${cnt.j}</span></td>`;
+                    dataGrafico.push({ n: (est.apellidos || "E").split(' ')[0], prob: cnt.f + cnt.a });
+                    tr.innerHTML = `
+                        <td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td>
+                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos || ''} ${est.Nombres || ''}</td>
+                        <td class="px-6 py-3 text-[9px]"><b>${est.representante || '---'}</b><br>${est.telefono_repre || ''}</td>
+                        <td class="px-6 py-3 text-center font-bold text-indigo-600">${cnt.p}-${cnt.f}-${cnt.a}-${cnt.j}</td>`;
                 }
                 tabla.appendChild(tr);
             }
@@ -181,11 +193,8 @@
     }
 
     function traducir(v) {
-        if(v === "true") return "Presente";
-        if(v === "false") return "Falta";
-        if(v === "atraso") return "Atraso";
-        if(v === "justificado") return "Justificado";
-        return "N/A";
+        const t = { "true": "Asistió", "false": "Falta", "atraso": "Atraso", "justificado": "Justificado" };
+        return t[v] || "N/A";
     }
 
     function dibujarChart(datos) {
@@ -196,7 +205,7 @@
             type: 'bar',
             data: {
                 labels: top.map(d => d.n),
-                datasets: [{ label: 'Faltas + Atrasos', data: top.map(d => d.prob), backgroundColor: '#1a237e', borderRadius: 6 }]
+                datasets: [{ label: 'Faltas+Atrasos', data: top.map(d => d.prob), backgroundColor: '#1a237e' }]
             },
             options: { responsive: true, plugins: { legend: { display: false } } }
         });
