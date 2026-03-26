@@ -11,8 +11,9 @@
         :root { --azul: #5c6bc0; --naranja: #ffb74d; --gris-fondo: #f4f7f6; }
         body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; }
         .card-header { background: linear-gradient(135deg, #1a237e 0%, var(--azul) 100%); }
-        .nombre-resaltado { color: #1a237e; font-weight: 800; text-transform: uppercase; }
-        .check-asistencia { width: 28px; height: 28px; cursor: pointer; accent-color: #1b5e20; }
+        .nombre-resaltado { color: #1a237e; font-weight: 800; text-transform: uppercase; font-size: 11px; }
+        /* Estilo para el selector de asistencia */
+        .select-asistencia { padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 11px; outline: none; border: 2px solid #e2e8f0; transition: all 0.3s; }
         .badge-festejo { background: #ff4081; color: white; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 900; animation: pulse 1.5s infinite; display: inline-flex; align-items: center; gap: 4px; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
@@ -58,7 +59,7 @@
                     <tr class="text-indigo-900 border-b border-gray-200">
                         <th class="px-6 py-4 uppercase font-black tracking-wider">Apellidos y Nombres</th>
                         <th class="px-6 py-4 uppercase font-black tracking-wider text-center">Estado Especial</th>
-                        <th class="px-6 py-4 uppercase font-black tracking-wider text-center">Asistencia (Presente)</th>
+                        <th class="px-6 py-4 uppercase font-black tracking-wider text-center">Estado de Asistencia</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-asistencia" class="divide-y divide-gray-100">
@@ -101,19 +102,20 @@
     let asignacionesDocente = [];
     let uidDocente = "";
 
-    // Inicializar fecha de hoy
+    // CORRECCIÓN DE FECHA (Local)
     const inputFecha = document.getElementById('fecha-asistencia');
-    inputFecha.valueAsDate = new Date();
+    const hoy = new Date();
+    const offset = hoy.getTimezoneOffset();
+    const fechaLocal = new Date(hoy.getTime() - (offset * 60 * 1000));
+    inputFecha.value = fechaLocal.toISOString().split('T')[0];
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             uidDocente = user.uid;
             const qAsig = query(collection(db, "asignaciones"), where("id_docente", "==", user.uid));
             const snapAsig = await getDocs(qAsig);
-            
             const selectGrado = document.getElementById('select-grado');
             selectGrado.innerHTML = '<option value="">Grado...</option>';
-
             snapAsig.forEach(doc => {
                 const data = doc.data();
                 asignacionesDocente.push(data);
@@ -137,10 +139,9 @@
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
         const tabla = document.getElementById('tabla-asistencia');
-        const fechaSel = new Date(inputFecha.value + "T12:00:00"); // Evita errores de zona horaria
+        const fechaSel = new Date(inputFecha.value + "T12:00:00");
 
         if(!grado || !paralelo) return Swal.fire('Atención', 'Seleccione Grado y Paralelo', 'warning');
-
         tabla.innerHTML = '<tr><td colspan="3" class="text-center py-12 italic text-indigo-500 font-bold">Generando lista...</td></tr>';
 
         try {
@@ -148,8 +149,6 @@
             const snapEst = await getDocs(qEst);
             let listaOrdenada = [];
             snapEst.forEach(doc => listaOrdenada.push({ id: doc.id, ...doc.data() }));
-            
-            // Ordenar por apellidos
             listaOrdenada.sort((a, b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
 
             tabla.innerHTML = "";
@@ -157,7 +156,7 @@
                 let festejo = "--";
                 if(e.fecha_nacimiento) {
                     const fNac = e.fecha_nacimiento.toDate();
-                    if(fNac.getDate() === (fechaSel.getDate()) && fNac.getMonth() === fechaSel.getMonth()) {
+                    if(fNac.getDate() === fechaSel.getDate() && fNac.getMonth() === fechaSel.getMonth()) {
                         festejo = '<span class="badge-festejo">🎉 FESTEJO</span>';
                     }
                 }
@@ -168,7 +167,12 @@
                     <td class="px-6 py-4"><span class="nombre-resaltado">${e.apellidos || ''} ${e.Nombres || ''}</span></td>
                     <td class="px-6 py-4 text-center font-bold text-gray-400">${festejo}</td>
                     <td class="px-6 py-4 text-center">
-                        <input type="checkbox" class="check-asistencia est-check" data-id="${e.id}" checked>
+                        <select class="select-asistencia est-status" data-id="${e.id}">
+                            <option value="true" class="text-green-600">PRESENTE</option>
+                            <option value="false" class="text-red-600">FALTA</option>
+                            <option value="atraso" class="text-orange-600">ATRASO</option>
+                            <option value="justificado" class="text-blue-600">JUSTIFICADO</option>
+                        </select>
                     </td>
                 `;
                 tabla.appendChild(tr);
@@ -178,14 +182,14 @@
     });
 
     document.getElementById('btn-guardar').addEventListener('click', async () => {
-        const checks = document.querySelectorAll('.est-check');
+        const statusSelectors = document.querySelectorAll('.est-status');
         const grado = document.getElementById('select-grado').value;
         const paralelo = document.getElementById('select-paralelo').value;
         const fechaVal = new Date(inputFecha.value + "T00:00:00");
 
         Swal.fire({
             title: '¿Guardar asistencia?',
-            text: "Se registrará el estado de todos los estudiantes.",
+            text: "Se registrará el estado seleccionado para cada estudiante.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#5c6bc0',
@@ -193,22 +197,19 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const promesas = Array.from(checks).map(c => {
+                    const promesas = Array.from(statusSelectors).map(s => {
                         return addDoc(collection(db, "asistencias_diarias"), {
                             id_docente: uidDocente,
                             id_grado: grado,
                             id_paralelo: paralelo,
-                            id_estudiante: c.getAttribute('data-id'),
+                            id_estudiante: s.getAttribute('data-id'),
                             fecha: Timestamp.fromDate(fechaVal),
-                            asistencia: c.checked ? "true" : "false"
+                            asistencia: s.value // Guardará "true", "false", "atraso" o "justificado"
                         });
                     });
-
                     await Promise.all(promesas);
                     Swal.fire('¡Listo!', 'Asistencia guardada con éxito.', 'success').then(() => location.reload());
-                } catch (e) {
-                    Swal.fire('Error', 'No se pudo guardar la información.', 'error');
-                }
+                } catch (e) { Swal.fire('Error', 'No se pudo guardar.', 'error'); }
             }
         });
     });
