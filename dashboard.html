@@ -365,6 +365,36 @@
         document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = "index.html").catch(err => console.error(err));
         });
+
+        ///////////////////////////////////////////////
+// ... (aquí está tu código anterior de Auth y conteo de estudiantes)
+
+        // --- FUNCIÓN PARA EL MENÚ DE REPORTES ---
+        window.mostrarMenuReportes = function() {
+            Swal.fire({
+                title: 'CENTRO DE REPORTES',
+                text: '¿Qué tipo de informe desea generar?',
+                showDenyButton: true,
+                confirmButtonText: '<i class="fa-solid fa-file-signature"></i> NOTAS',
+                denyButtonText: '<i class="fa-solid fa-calendar-check"></i> ASISTENCIAS',
+                confirmButtonColor: '#4dd0e1', // Celeste como tu botón de notas
+                denyButtonColor: '#ba68c8',    // Morado como tu botón de asistencia
+                cancelButtonText: 'CANCELAR',
+                showCancelButton: true,
+                customClass: {
+                    popup: 'rounded-3xl shadow-2xl',
+                    confirmButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest',
+                    denyButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'reporte_notas.html';
+                } else if (result.isDenied) {
+                    window.location.href = 'reporte_asistencias.html';
+                }
+            });
+        };
+        
     </script>
 </body>
 </html>
