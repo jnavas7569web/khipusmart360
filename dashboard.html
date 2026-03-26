@@ -259,7 +259,7 @@
         </div>
     </main>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -276,6 +276,33 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // --- EXPORTAR FUNCIÓN AL WINDOW (Para que los botones la vean) ---
+        window.mostrarMenuReportes = function() {
+            Swal.fire({
+                title: 'CENTRO DE REPORTES',
+                text: '¿Qué tipo de informe desea generar?',
+                icon: 'question',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-file-signature mr-2"></i> NOTAS',
+                denyButtonText: '<i class="fa-solid fa-calendar-check mr-2"></i> ASISTENCIAS',
+                cancelButtonText: 'CANCELAR',
+                confirmButtonColor: '#4dd0e1',
+                denyButtonColor: '#ba68c8',
+                customClass: {
+                    popup: 'rounded-3xl shadow-2xl',
+                    confirmButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest',
+                    denyButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'reporte_notas.html';
+                } else if (result.isDenied) {
+                    window.location.href = 'reporte_asistencias.html';
+                }
+            });
+        };
 
         function animarConteo(elementoId, valorFinal) {
             const el = document.getElementById(elementoId);
@@ -351,7 +378,6 @@
             }
         });
 
-        // Eventos Sidebar
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.getElementById('sidebar');
         const closeMenu = document.getElementById('closeMenu');
@@ -361,40 +387,9 @@
             if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && !hamburger.contains(e.target)) sidebar.classList.remove('active');
         });
 
-        // BOTÓN SALIR (CORREGIDO)
         document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = "index.html").catch(err => console.error(err));
         });
-
-        ///////////////////////////////////////////////
-// ... (aquí está tu código anterior de Auth y conteo de estudiantes)
-
-        // --- FUNCIÓN PARA EL MENÚ DE REPORTES ---
-        window.mostrarMenuReportes = function() {
-            Swal.fire({
-                title: 'CENTRO DE REPORTES',
-                text: '¿Qué tipo de informe desea generar?',
-                showDenyButton: true,
-                confirmButtonText: '<i class="fa-solid fa-file-signature"></i> NOTAS',
-                denyButtonText: '<i class="fa-solid fa-calendar-check"></i> ASISTENCIAS',
-                confirmButtonColor: '#4dd0e1', // Celeste como tu botón de notas
-                denyButtonColor: '#ba68c8',    // Morado como tu botón de asistencia
-                cancelButtonText: 'CANCELAR',
-                showCancelButton: true,
-                customClass: {
-                    popup: 'rounded-3xl shadow-2xl',
-                    confirmButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest',
-                    denyButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = 'reporte_notas.html';
-                } else if (result.isDenied) {
-                    window.location.href = 'reporte_asistencias.html';
-                }
-            });
-        };
-        
     </script>
 </body>
 </html>
