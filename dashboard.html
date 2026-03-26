@@ -171,7 +171,7 @@
             </a>
             <a href="asistencias.html" class="menu-item"><i class="fa-solid fa-calendar-check"></i> ASISTENCIAS</a>
             <a href="#" class="menu-item"><i class="fa-solid fa-file-signature"></i> NOTAS</a>
-            <a href="#" class="menu-item" onclick="mostrarMenuReportes()">  <i class="fa-solid fa-chart-pie"></i> REPORTES </a>
+            <a href="reportesS.html" class="menu-item"> <i class="fa-solid fa-chart-pie"></i> REPORTES </a>
             <a href="contactar.html" class="sidebar-link">
                 <i class="fa-solid fa-address-book"></i>
                 <span>CONTACTAR REPRE.</span>
@@ -230,9 +230,9 @@
                     <i class="fa-solid fa-file-invoice action-icon"></i>
                     <div class="action-text">Notas</div>
                 </div>
-                <div class="card action-card card-rojo" onclick="mostrarMenuReportes()">
+                <div class="card action-card card-rojo" onclick="window.location.href='reportesS.html'">
                     <i class="fa-solid fa-chart-line action-icon"></i>
-                        <div class="action-text">Reportes</div>
+                    <div class="action-text">Reportes</div>
                 </div>
                 <div class="card action-card card-morado" onclick="window.location.href='asistencias.html'">
             <i class="fa-solid fa-calendar-check action-icon"></i>
@@ -259,7 +259,7 @@
         </div>
     </main>
 
-   <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -276,33 +276,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // --- EXPORTAR FUNCIÓN AL WINDOW (Para que los botones la vean) ---
-        window.mostrarMenuReportes = function() {
-            Swal.fire({
-                title: 'CENTRO DE REPORTES',
-                text: '¿Qué tipo de informe desea generar?',
-                icon: 'question',
-                showDenyButton: true,
-                showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-file-signature mr-2"></i> NOTAS',
-                denyButtonText: '<i class="fa-solid fa-calendar-check mr-2"></i> ASISTENCIAS',
-                cancelButtonText: 'CANCELAR',
-                confirmButtonColor: '#4dd0e1',
-                denyButtonColor: '#ba68c8',
-                customClass: {
-                    popup: 'rounded-3xl shadow-2xl',
-                    confirmButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest',
-                    denyButton: 'px-6 py-3 font-bold text-xs uppercase tracking-widest'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = 'reporte_notas.html';
-                } else if (result.isDenied) {
-                    window.location.href = 'reporte_asistencias.html';
-                }
-            });
-        };
 
         function animarConteo(elementoId, valorFinal) {
             const el = document.getElementById(elementoId);
@@ -378,6 +351,7 @@
             }
         });
 
+        // Eventos Sidebar
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.getElementById('sidebar');
         const closeMenu = document.getElementById('closeMenu');
@@ -387,9 +361,11 @@
             if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && !hamburger.contains(e.target)) sidebar.classList.remove('active');
         });
 
+        // BOTÓN SALIR (CORREGIDO)
         document.getElementById('btn-salir-sidebar').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = "index.html").catch(err => console.error(err));
         });
+        
     </script>
 </body>
 </html>
