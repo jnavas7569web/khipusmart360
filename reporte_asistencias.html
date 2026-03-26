@@ -3,76 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KhipuSmart360 - Informe de Asistencia</title>
+    <title>KhipuSmart360 - Informe Final</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --azul: #1a237e; --gris-fondo: #f4f7f6; }
-        body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; font-size: 12px; }
+        body { background-color: var(--gris-fondo); font-family: 'Segoe UI', sans-serif; font-size: 11px; }
         .header-reporte { background: linear-gradient(135deg, #1a237e 0%, #5c6bc0 100%); color: white; }
-        .badge { padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
-        .badge-true { background: #dcfce7; color: #166534; border: 1px solid #166534; }
-        .badge-false { background: #fee2e2; color: #991b1b; border: 1px solid #991b1b; }
-        .badge-atraso { background: #fef3c7; color: #92400e; border: 1px solid #92400e; }
-        .badge-justificado { background: #e0f2fe; color: #075985; border: 1px solid #075985; }
-        @media print { .no-print { display: none !important; } .print-shadow { shadow: none !important; border: 1px solid #eee; } }
+        .badge { padding: 3px 10px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; border: 1px solid; }
+        .badge-true { background: #dcfce7; color: #166534; border-color: #166534; }
+        .badge-false { background: #fee2e2; color: #991b1b; border-color: #991b1b; }
+        .badge-atraso { background: #fef3c7; color: #92400e; border-color: #92400e; }
+        .badge-justificado { background: #e0f2fe; color: #075985; border-color: #075985; }
+        @media print { .no-print { display: none !important; } body { padding: 0; background: white; } }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-<div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden print-shadow">
-    <div class="header-reporte p-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-black tracking-tighter">KHIPUSMART360 - REPORTE DE ASISTENCIA</h1>
-            <p id="info-filtros" class="text-indigo-100 text-[10px] font-bold mt-1 uppercase tracking-widest"></p>
-        </div>
-        <img src="https://cdn-icons-png.flaticon.com/512/2991/2991108.png" class="w-12 h-12 opacity-20 no-print">
+<div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border">
+    <div class="header-reporte p-6">
+        <h1 class="text-xl font-black tracking-tighter uppercase italic">KhipuSmart360 - Reporte de Asistencia</h1>
+        <p id="info-filtros" class="text-indigo-100 text-[10px] font-bold mt-1 uppercase tracking-widest italic"></p>
     </div>
 
     <div class="p-6">
-        <div class="overflow-x-auto border rounded-2xl">
+        <div class="overflow-x-auto border rounded-2xl mb-6">
             <table class="w-full text-left">
                 <thead class="bg-gray-100 border-b border-gray-200">
                     <tr id="cabecera-tabla" class="text-indigo-900 font-black uppercase text-[10px] tracking-widest">
                         </tr>
                 </thead>
                 <tbody id="cuerpo-tabla" class="divide-y divide-gray-100 text-gray-700 font-medium">
-                    <tr>
-                        <td colspan="10" class="text-center py-20 italic">Procesando información de Firebase...</td>
-                    </tr>
+                    <tr><td colspan="10" class="text-center py-20 italic">Consultando base de datos...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <div id="resumen-dia" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+        <div id="resumen-dia" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden mb-6">
             <div class="bg-gray-50 p-4 rounded-xl border text-center">
-                <span class="block text-[10px] font-black text-gray-400 uppercase">Total Estudiantes</span>
+                <span class="block text-[9px] font-black text-gray-400 uppercase">Total Estudiantes</span>
                 <span id="res-total" class="text-xl font-black text-indigo-900">0</span>
             </div>
             <div class="bg-green-50 p-4 rounded-xl border border-green-200 text-center">
-                <span class="block text-[10px] font-black text-green-600 uppercase">Asistieron</span>
+                <span class="block text-[9px] font-black text-green-600 uppercase">Asistieron</span>
                 <span id="res-presentes" class="text-xl font-black text-green-700">0</span>
             </div>
             <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center">
-                <span class="block text-[10px] font-black text-red-600 uppercase">Faltaron</span>
+                <span class="block text-[9px] font-black text-red-600 uppercase">Faltaron</span>
                 <span id="res-faltas" class="text-xl font-black text-red-700">0</span>
             </div>
             <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
-                <span class="block text-[10px] font-black text-blue-600 uppercase">Justificados</span>
+                <span class="block text-[9px] font-black text-blue-600 uppercase">Justificados</span>
                 <span id="res-justificados" class="text-xl font-black text-blue-700">0</span>
             </div>
         </div>
 
-        <div id="contenedor-grafico" class="mt-8 p-6 bg-gray-50 rounded-2xl border hidden">
-            <h3 class="text-center font-black text-gray-400 text-[10px] uppercase mb-4 tracking-widest">Top 5 Estudiantes con más Faltas/Atrasos</h3>
-            <canvas id="graficoFaltas" style="max-height: 250px;"></canvas>
+        <div id="contenedor-grafico" class="p-6 bg-gray-50 rounded-2xl border hidden">
+            <h3 class="text-center font-black text-gray-400 text-[9px] uppercase mb-4 tracking-widest">Top 5 Inasistencias / Atrasos (Ranking del Periodo)</h3>
+            <canvas id="graficoFaltas" style="max-height: 200px;"></canvas>
         </div>
 
         <div class="mt-8 flex justify-between items-center no-print">
-            <button onclick="history.back()" class="text-gray-400 hover:text-indigo-600 font-bold text-xs uppercase transition-all">
-                <i class="fa-solid fa-chevron-left mr-2"></i> Volver
+            <button onclick="history.back()" class="text-gray-400 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest">
+                <i class="fa-solid fa-chevron-left mr-2"></i> Ajustar Filtros
             </button>
             <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-800 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all transform active:scale-95">
                 <i class="fa-solid fa-print mr-2"></i> Imprimir Reporte
@@ -83,7 +77,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsEeL_xG-koVvHWpTot5f1PeqNQo-eN8o",
@@ -97,17 +91,17 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function generarReporte() {
+    async function cargarReporte() {
         const params = new URLSearchParams(window.location.search);
         const cursoRaw = params.get('curso');
         const desdeStr = params.get('desde');
         const hastaStr = params.get('hasta');
 
-        if(!cursoRaw || !desdeStr) return;
+        if(!cursoRaw || !desdeStr || !hastaStr) return;
         const [grado, paralelo] = cursoRaw.split('-');
         const esMismoDia = (desdeStr === hastaStr);
         
-        document.getElementById('info-filtros').innerText = `Curso: ${grado} "${paralelo}" | Periodo: ${desdeStr} al ${hastaStr}`;
+        document.getElementById('info-filtros').innerText = `GRADO: ${grado} "${paralelo}" | PERIODO: DEL ${desdeStr} AL ${hastaStr}`;
 
         const fInicio = new Date(desdeStr + "T00:00:00");
         const fFin = new Date(hastaStr + "T23:59:59");
@@ -115,29 +109,35 @@
         const cabecera = document.getElementById('cabecera-tabla');
 
         try {
-            // 1. Obtener Estudiantes
+            // 1. OBTENER ESTUDIANTES USANDO CAMPOS EXACTOS DE TU CAPTURA
             const qEst = query(collection(db, "estudiantes"), where("id_grado", "==", grado), where("id_paralelo", "==", paralelo));
             const snapEst = await getDocs(qEst);
-            let listaEstudiantes = [];
-            snapEst.forEach(d => listaEstudiantes.push({ id: d.id, ...d.data() }));
+            let listaEst = [];
+            snapEst.forEach(d => listaEst.push({ id: d.id, ...d.data() }));
             
-            // Ordenar por Apellidos (Manual JS)
-            listaEstudiantes.sort((a, b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
+            // Ordenar por apellidos (JS)
+            listaEst.sort((a, b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
+
+            if (listaEst.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="10" class="text-center py-20 italic">No hay estudiantes en este curso.</td></tr>';
+                return;
+            }
 
             tabla.innerHTML = "";
             let statsDia = { total: 0, p: 0, f: 0, a: 0, j: 0 };
-            let dataParaGrafico = [];
+            let dataGrafico = [];
 
+            // Configurar cabecera según reporte
             if (esMismoDia) {
-                cabecera.innerHTML = `<th class="px-6 py-4 w-12">#</th><th class="px-6 py-4 text-center">Apellidos y Nombres</th><th class="px-6 py-4 text-center">Estado</th>`;
+                cabecera.innerHTML = `<th class="px-6 py-4 w-12 text-center">#</th><th class="px-6 py-4">Apellidos y Nombres</th><th class="px-6 py-4 text-center">Asistencia del Día</th>`;
                 document.getElementById('resumen-dia').classList.remove('hidden');
             } else {
-                cabecera.innerHTML = `<th class="px-6 py-4 w-12">#</th><th class="px-6 py-4">Estudiante</th><th class="px-6 py-4">Representante / Tel.</th><th class="px-6 py-4 text-center">Resumen (P-F-A-J)</th>`;
+                cabecera.innerHTML = `<th class="px-6 py-4 w-12">#</th><th class="px-6 py-4">Apellidos y Nombres</th><th class="px-6 py-4">Representante / Teléfono</th><th class="px-6 py-4 text-center text-blue-800">Resumen (P-F-A-J)</th>`;
                 document.getElementById('contenedor-grafico').classList.remove('hidden');
             }
 
             let num = 1;
-            for (const est of listaEstudiantes) {
+            for (const est of listaEst) {
                 const qAsis = query(collection(db, "asistencias_diarias"), 
                     where("id_estudiante", "==", est.id),
                     where("fecha", ">=", Timestamp.fromDate(fInicio)),
@@ -145,85 +145,79 @@
                 );
                 const snapAsis = await getDocs(qAsis);
                 
-                let conteo = { presente: 0, falta: 0, atraso: 0, justificado: 0 };
-                let ultimoEstado = "---";
+                let cnt = { p: 0, f: 0, a: 0, j: 0 };
+                let ultimoE = "---";
 
-                snapAsis.forEach(asisDoc => {
-                    const d = asisDoc.data();
-                    if (d.asistencia === "true") { conteo.presente++; ultimoEstado = "true"; }
-                    else if (d.asistencia === "false") { conteo.falta++; ultimoEstado = "false"; }
-                    else if (d.asistencia === "atraso") { conteo.atraso++; ultimoEstado = "atraso"; }
-                    else if (d.asistencia === "justificado") { conteo.justificado++; ultimoEstado = "justificado"; }
+                snapAsis.forEach(dAsis => {
+                    const data = dAsis.data();
+                    if (data.asistencia === "true") { cnt.p++; ultimoE = "true"; }
+                    else if (data.asistencia === "false") { cnt.f++; ultimoE = "false"; }
+                    else if (data.asistencia === "atraso") { cnt.a++; ultimoE = "atraso"; }
+                    else if (data.asistencia === "justificado") { cnt.j++; ultimoE = "justificado"; }
                 });
 
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b";
+
                 if (esMismoDia) {
                     statsDia.total++;
-                    if(ultimoEstado === "true") statsDia.p++;
-                    else if(ultimoEstado === "false") statsDia.f++;
-                    else if(ultimoEstado === "justificado") statsDia.j++;
+                    if(ultimoE === "true") statsDia.p++;
+                    else if(ultimoE === "false") statsDia.f++;
+                    else if(ultimoE === "justificado") statsDia.j++;
 
                     tr.innerHTML = `
                         <td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td>
-                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos} ${est.Nombres}</td>
-                        <td class="px-6 py-3 text-center"><span class="badge badge-${ultimoEstado}">${traducir(ultimoEstado)}</span></td>
+                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos || ''} ${est.Nombres || ''}</td>
+                        <td class="px-6 py-3 text-center"><span class="badge badge-${ultimoE}">${traducir(ultimoE)}</span></td>
                     `;
                 } else {
-                    dataParaGrafico.push({ nombre: est.apellidos.split(' ')[0], totalProblemas: conteo.falta + conteo.atraso });
+                    dataGrafico.push({ n: est.apellidos.split(' ')[0], prob: cnt.f + cnt.a });
                     tr.innerHTML = `
-                        <td class="px-6 py-3 font-black text-gray-300">${num++}</td>
-                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos} ${est.Nombres}</td>
-                        <td class="px-6 py-3 text-[10px]"><b>${est.Representante || '---'}</b><br><span class="text-blue-500">${est.Telefono || ''}</span></td>
-                        <td class="px-6 py-3 text-center">
-                            <span class="text-green-600 font-black">P:${conteo.presente}</span> | 
-                            <span class="text-red-600 font-black">F:${conteo.falta}</span> | 
-                            <span class="text-orange-500 font-black">A:${conteo.atraso}</span> | 
-                            <span class="text-blue-500 font-black">J:${conteo.justificado}</span>
+                        <td class="px-6 py-3 font-black text-gray-300 text-center">${num++}</td>
+                        <td class="px-6 py-3 font-bold uppercase text-indigo-900">${est.apellidos || ''} ${est.Nombres || ''}</td>
+                        <td class="px-6 py-3 text-[10px]"><b>${est.representante || '---'}</b><br><span class="text-blue-500 font-bold">${est.telefono_repre || ''}</span></td>
+                        <td class="px-6 py-3 text-center font-bold">
+                            <span class="text-green-600">P:${cnt.p}</span> | <span class="text-red-600">F:${cnt.f}</span> | <span class="text-orange-500">A:${cnt.a}</span> | <span class="text-blue-500">J:${cnt.j}</span>
                         </td>
                     `;
                 }
                 tabla.appendChild(tr);
             }
 
-            if(esMismoDia) {
+            if (esMismoDia) {
                 document.getElementById('res-total').innerText = statsDia.total;
                 document.getElementById('res-presentes').innerText = statsDia.p;
                 document.getElementById('res-faltas').innerText = statsDia.f;
                 document.getElementById('res-justificados').innerText = statsDia.j;
             } else {
-                crearGrafico(dataParaGrafico);
+                dibujarChart(dataGrafico);
             }
-
-        } catch (e) { console.error(e); }
+        } catch (err) { console.error(err); }
     }
 
-    function traducir(e) {
-        if(e === "true") return "Presente";
-        if(e === "false") return "Falta";
-        if(e === "atraso") return "Atraso";
-        if(e === "justificado") return "Justificado";
-        return "Sin Registro";
+    function traducir(v) {
+        if(v === "true") return "Presente";
+        if(v === "false") return "Falta";
+        if(v === "atraso") return "Atraso";
+        if(v === "justificado") return "Justificado";
+        return "N/A";
     }
 
-    function crearGrafico(datos) {
-        const top5 = datos.sort((a, b) => b.totalProblemas - a.totalProblemas).slice(0, 5);
+    function dibujarChart(datos) {
+        const top = datos.sort((a,b) => b.prob - a.prob).filter(d => d.prob > 0).slice(0, 5);
+        if (top.length === 0) return;
         const ctx = document.getElementById('graficoFaltas').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: top5.map(d => d.nombre),
-                datasets: [{
-                    label: 'Suma de Faltas + Atrasos',
-                    data: top5.map(d => d.totalProblemas),
-                    backgroundColor: '#ef5350',
-                    borderRadius: 10
-                }]
+                labels: top.map(d => d.n),
+                datasets: [{ label: 'Faltas + Atrasos', data: top.map(d => d.prob), backgroundColor: '#1a237e', borderRadius: 6 }]
             },
             options: { responsive: true, plugins: { legend: { display: false } } }
         });
     }
 
-    generarReporte();
+    cargarReporte();
 </script>
 </body>
 </html>
